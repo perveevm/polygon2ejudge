@@ -202,31 +202,42 @@ public class ContestUtils {
             try {
                 System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
                 Files.copy(fromPath, toPath);
-
-                String fileWithoutExtension = toPath.getFileName().toString();
-                fileWithoutExtension = fileWithoutExtension.substring(0, fileWithoutExtension.indexOf('.'));
-
-                // DONE: replace this shit to g++!!!
-//                String command = String.format("/usr/local/bin/g++-10 -o %s %s -std=c++17 -Wl,-stack_size -Wl,100000000",
-//                        fileWithoutExtension,
-//                        toPath.getFileName().toString());
-                String command = String.format("g++ -o %s %s -std=c++17 -DEJUDGE", fileWithoutExtension,
-                        toPath.getFileName().toString());
-
-                Process compilation = Runtime.getRuntime().exec(command, null,
-                        problemDirectory.getParent().toFile());
-
-                System.out.printf("Compiling %s\n", toPath.getFileName().toString());
-                int exitCode = compilation.waitFor();
-
-                if (exitCode != 0) {
-                    throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
-                }
             } catch (IOException e) {
-                throw new ContestException("Error happened while copying executable files: " + e.getMessage(), e);
-            } catch (InterruptedException e) {
-                throw new ContestException("Error happened while compiling executables: " + e.getMessage(), e);
+                throw new ContestException("Error happened while copying file: " + e.getMessage(), e);
             }
+
+            compileCode(toPath, false);
+
+//            try {
+//                System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
+//                Files.copy(fromPath, toPath);
+//
+//                compileCode(toPath, false);
+//
+////                String fileWithoutExtension = toPath.getFileName().toString();
+////                fileWithoutExtension = fileWithoutExtension.substring(0, fileWithoutExtension.indexOf('.'));
+//
+//                // DONE: replace this shit to g++!!!
+////                String command = String.format("/usr/local/bin/g++-10 -o %s %s -std=c++17 -Wl,-stack_size -Wl,100000000",
+////                        fileWithoutExtension,
+////                        toPath.getFileName().toString());
+//                String command = String.format("g++ -o %s %s -std=c++17 -DEJUDGE", fileWithoutExtension,
+//                        toPath.getFileName().toString());
+//
+//                Process compilation = Runtime.getRuntime().exec(command, null,
+//                        problemDirectory.getParent().toFile());
+//
+//                System.out.printf("Compiling %s\n", toPath.getFileName().toString());
+//                int exitCode = compilation.waitFor();
+//
+//                if (exitCode != 0) {
+//                    throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
+//                }
+//            } catch (IOException e) {
+//                throw new ContestException("Error happened while copying executable files: " + e.getMessage(), e);
+//            } catch (InterruptedException e) {
+//                throw new ContestException("Error happened while compiling executables: " + e.getMessage(), e);
+//            }
         }
     }
 
@@ -383,22 +394,24 @@ public class ContestUtils {
             throw new ContestException("Couldn't copy checker: " + e.getMessage(), e);
         }
 
-        String command = String.format("g++ -o %s %s -std=c++17 -DEJUDGE", fileWithoutExtension,
-                checkerTo.getFileName().toString());
+        compileCode(checkerTo, false);
 
-        try {
-            Process compilation = Runtime.getRuntime().exec(command, null,
-                    problemDirectory.getParent().toFile());
-
-            System.out.printf("Compiling %s\n", checkerTo.getFileName().toString());
-            int exitCode = compilation.waitFor();
-
-            if (exitCode != 0) {
-                throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new ContestException("Couldn't compile checker: " + e.getMessage(), e);
-        }
+//        String command = String.format("g++ -o %s %s -std=c++17 -DEJUDGE", fileWithoutExtension,
+//                checkerTo.getFileName().toString());
+//
+//        try {
+//            Process compilation = Runtime.getRuntime().exec(command, null,
+//                    problemDirectory.getParent().toFile());
+//
+//            System.out.printf("Compiling %s\n", checkerTo.getFileName().toString());
+//            int exitCode = compilation.waitFor();
+//
+//            if (exitCode != 0) {
+//                throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
+//            }
+//        } catch (IOException | InterruptedException e) {
+//            throw new ContestException("Couldn't compile checker: " + e.getMessage(), e);
+//        }
 
         String solutionDir = null;
         for (int i = 0; i < solutions.getLength(); i++) {
@@ -419,28 +432,30 @@ public class ContestUtils {
             throw new ContestException("Couldn't copy solution file: " + e.getMessage(), e);
         }
 
-        fileWithoutExtension = to.getFileName().toString();
-        fileWithoutExtension = fileWithoutExtension.substring(0, fileWithoutExtension.indexOf('.'));
-        // DONE: replace this shit!
-//        String command = String.format("/usr/local/bin/g++-10 -o %s %s -std=c++17 -Wl,-stack_size -Wl,100000000",
-//                fileWithoutExtension,
+        compileCode(to, true);
+
+//        fileWithoutExtension = to.getFileName().toString();
+//        fileWithoutExtension = fileWithoutExtension.substring(0, fileWithoutExtension.indexOf('.'));
+//        // DONE: replace this shit!
+////        String command = String.format("/usr/local/bin/g++-10 -o %s %s -std=c++17 -Wl,-stack_size -Wl,100000000",
+////                fileWithoutExtension,
+////                to.getFileName().toString());
+//        command = String.format("g++ -o %s %s -std=c++17 -O2", fileWithoutExtension,
 //                to.getFileName().toString());
-        command = String.format("g++ -o %s %s -std=c++17 -O2", fileWithoutExtension,
-                to.getFileName().toString());
-
-        System.out.println("Compiling " + fileWithoutExtension);
-        try {
-            Process compilation = Runtime.getRuntime().exec(command, null,
-                    problemDirectory.getParent().toFile());
-
-            int exitCode = compilation.waitFor();
-
-            if (exitCode != 0) {
-                throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
-            }
-        } catch (IOException | InterruptedException e) {
-            throw new ContestException("Couldn't compile solution file: " + e.getMessage(), e);
-        }
+//
+//        System.out.println("Compiling " + fileWithoutExtension);
+//        try {
+//            Process compilation = Runtime.getRuntime().exec(command, null,
+//                    problemDirectory.getParent().toFile());
+//
+//            int exitCode = compilation.waitFor();
+//
+//            if (exitCode != 0) {
+//                throw new ContestException("Error happened while compiling executables: exit code " + exitCode);
+//            }
+//        } catch (IOException | InterruptedException e) {
+//            throw new ContestException("Couldn't compile solution file: " + e.getMessage(), e);
+//        }
 
         Path testsDir = Paths.get(problemDirectory.getParent().toString(), "tests");
         for (int i = 0; i < testCount; i++) {
@@ -664,6 +679,29 @@ public class ContestUtils {
             return document;
         } catch (ParserConfigurationException | IOException | SAXException e) {
             throw new ContestException("Error happened while parsing problem.xml: " + e.getMessage(), e);
+        }
+    }
+
+    private static String removeExtension(final String fileName) {
+        return fileName.substring(0, fileName.lastIndexOf('.'));
+    }
+
+    private static void compileCode(final Path sourcePath, final boolean optimize) throws ContestException {
+        System.out.println("Compiling " + sourcePath.getFileName());
+
+        String command = String.format("g++ -o %s %s -std=c++17", removeExtension(sourcePath.getFileName().toString()), sourcePath.getFileName().toString());
+        if (optimize) {
+            command += " -O2";
+        }
+
+        try {
+            Process compilation = Runtime.getRuntime().exec(command, null, sourcePath.getParent().toFile());
+            int exitCode = compilation.waitFor();
+            if (exitCode != 0) {
+                throw new ContestException("Error happened while compiling file, exit code is " + exitCode);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new ContestException("Couldn't compile solution file: " + e.getMessage(), e);
         }
     }
 }
