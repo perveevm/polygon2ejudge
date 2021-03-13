@@ -27,17 +27,11 @@ dependencies {
     compile 'org.json:json:20201115'
 }
 
-task fatJar(type: Jar) {
+task buildJar(type: Jar) {
     manifest {
         attributes 'Main-Class': 'ru.strategy48.ejudge.polygon2ejudge.Main'
     }
 //    baseName = project.name + '-all'
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
     with jar
-}
-
-jar {
-    manifest {
-        attributes 'Main-Class': 'ru.ejudge.strategy48.polygon2ejudge.Main'
-    }
 }
