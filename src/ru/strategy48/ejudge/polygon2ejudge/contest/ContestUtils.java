@@ -206,7 +206,7 @@ public class ContestUtils {
                 throw new ContestException("Error happened while copying file: " + e.getMessage(), e);
             }
 
-            compileCode(toPath, false);
+            compileCode(toPath, true);
 
 //            try {
 //                System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
@@ -394,7 +394,7 @@ public class ContestUtils {
             throw new ContestException("Couldn't copy checker: " + e.getMessage(), e);
         }
 
-        compileCode(checkerTo, false);
+        compileCode(checkerTo, true);
 
 //        String command = String.format("g++ -o %s %s -std=c++17 -DEJUDGE", fileWithoutExtension,
 //                checkerTo.getFileName().toString());
@@ -432,7 +432,7 @@ public class ContestUtils {
             throw new ContestException("Couldn't copy solution file: " + e.getMessage(), e);
         }
 
-        compileCode(to, true);
+        compileCode(to, false);
 
 //        fileWithoutExtension = to.getFileName().toString();
 //        fileWithoutExtension = fileWithoutExtension.substring(0, fileWithoutExtension.indexOf('.'));
@@ -686,12 +686,14 @@ public class ContestUtils {
         return fileName.substring(0, fileName.lastIndexOf('.'));
     }
 
-    private static void compileCode(final Path sourcePath, final boolean optimize) throws ContestException {
+    private static void compileCode(final Path sourcePath, final boolean isScript) throws ContestException {
         System.out.println("Compiling " + sourcePath.getFileName());
 
         String command = String.format("g++ -o %s %s -std=c++17", removeExtension(sourcePath.getFileName().toString()), sourcePath.getFileName().toString());
-        if (optimize) {
+        if (!isScript) {
             command += " -O2";
+        } else {
+            command += " -DEJUDGE";
         }
 
         try {
