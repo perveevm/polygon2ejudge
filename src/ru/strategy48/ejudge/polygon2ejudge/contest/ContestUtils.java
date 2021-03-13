@@ -472,7 +472,7 @@ public class ContestUtils {
             List<String> args = new ArrayList<>();
             args.add("bash");
             args.add("-c");
-            args.add(fileWithoutExtension);
+            args.add(removeExtension(to.getFileName().toString()));
 
             ProcessBuilder processBuilder = new ProcessBuilder();
             processBuilder.command(args);
