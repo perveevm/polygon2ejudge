@@ -280,12 +280,6 @@ public class ContestUtils {
 
             System.out.println("Generating test #" + (i + 1));
 
-            String[] parsedCmd = test.getAttribute("cmd").split(" ");
-            List<String> args = new ArrayList<>();
-            args.add("bash");
-            args.add("-c");
-            args.add(String.join(" ", parsedCmd));
-
             Path testFile;
             try {
                 testFile = Files.createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
@@ -295,23 +289,7 @@ public class ContestUtils {
                         String.format(testNameFormat, i + 1)), e);
             }
 
-            try {
-                ProcessBuilder processBuilder = new ProcessBuilder();
-                processBuilder.command(args);
-                processBuilder.directory(problemDirectory.getParent().toFile());
-                processBuilder.redirectOutput(testFile.toFile());
-                processBuilder.environment().put("PATH", processBuilder.environment().get("PATH") + ":"
-                        + problemDirectory.getParent().toString());
-
-                Process generation = processBuilder.start();
-                int exitCode = generation.waitFor();
-
-                if (exitCode != 0) {
-                    throw new ScriptException(String.join(" ", args));
-                }
-            } catch (InterruptedException | IOException e) {
-                throw new ScriptException(String.join(" ", args), e);
-            }
+            executeScript(test.getAttribute("cmd"), problemDirectory.getParent(), null, testFile);
 
             if (fromFile != null) {
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
@@ -366,8 +344,7 @@ public class ContestUtils {
                 getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
                 getAttribute("path"));
         Path checkerTo = Paths.get(problemDirectory.getParent().toString(), checkerFrom.getFileName().toString());
-        String fileWithoutExtension = checkerTo.getFileName().toString().
-                substring(0, checkerTo.getFileName().toString().indexOf('.'));
+        String fileWithoutExtension = removeExtension(checkerTo.getFileName().toString());
 
         try {
             Files.deleteIfExists(checkerTo);
@@ -421,29 +398,7 @@ public class ContestUtils {
                 throw new FileSystemException(outputFile, e);
             }
 
-            List<String> args = new ArrayList<>();
-            args.add("bash");
-            args.add("-c");
-            args.add(removeExtension(to.getFileName().toString()));
-
-            ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command(args);
-            processBuilder.directory(problemDirectory.getParent().toFile());
-            processBuilder.redirectInput(inputFile.toFile());
-            processBuilder.redirectOutput(outputFile.toFile());
-            processBuilder.environment().put("PATH", processBuilder.environment().get("PATH") + ":"
-                    + problemDirectory.getParent().toString());
-
-            try {
-                Process solving = processBuilder.start();
-                int exitCode = solving.waitFor();
-
-                if (exitCode != 0) {
-                    throw new ScriptException(String.join(" ", args));
-                }
-            } catch (IOException | InterruptedException e) {
-                throw new ScriptException(String.join(" ", args), e);
-            }
+            executeScript(removeExtension(to.getFileName().toString()), problemDirectory.getParent(), inputFile, outputFile);
         }
     }
 
@@ -637,6 +592,34 @@ public class ContestUtils {
 
     private static String removeExtension(final String fileName) {
         return fileName.substring(0, fileName.lastIndexOf('.'));
+    }
+
+    private static void executeScript(final String cmd, final Path workingDirectory,
+                                      final Path inputRedirection, final Path outputRedirection)
+            throws ContestException {
+        ProcessBuilder processBuilder = new ProcessBuilder();
+        processBuilder.command(List.of("bash", "-c", cmd));
+        processBuilder.directory(workingDirectory.toFile());
+
+        if (inputRedirection != null) {
+            processBuilder.redirectInput(inputRedirection.toFile());
+        }
+        if (outputRedirection != null) {
+            processBuilder.redirectOutput(outputRedirection.toFile());
+        }
+        processBuilder.environment().put("PATH", processBuilder.environment().get("PATH") + ":"
+                + workingDirectory.toString());
+
+        try {
+            Process process = processBuilder.start();
+            int exitCode = process.waitFor();
+
+            if (exitCode != 0) {
+                throw new ScriptException(cmd);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new ScriptException(cmd, e);
+        }
     }
 
     private static void compileCode(final Path sourcePath, final boolean isScript) throws ContestException {
