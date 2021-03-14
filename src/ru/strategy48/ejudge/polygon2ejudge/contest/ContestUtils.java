@@ -41,21 +41,13 @@ public class ContestUtils {
 
         Path problemsDirectory = Paths.get(contestDirectory.toString(), "problems");
         if (Files.notExists(problemsDirectory)) {
-            try {
-                Files.createDirectory(problemsDirectory);
-            } catch (IOException e) {
-                throw new FileSystemException(problemsDirectory, e);
-            }
+            createDirectory(problemsDirectory);
         }
 
         for (Problem problem : problems) {
             ejudgeProblemId++;
             Path problemPath = Paths.get(problemsDirectory.toString(), problem.getName());
-            try {
-                Files.createDirectory(problemPath);
-            } catch (IOException e) {
-                throw new FileSystemException(problemPath, e);
-            }
+            createDirectory(problemPath);
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
                     String.valueOf((char)('A' + ejudgeProblemId - 1)));
@@ -63,62 +55,25 @@ public class ContestUtils {
 
         Path configDirectory = Paths.get(contestDirectory.toString(), "conf");
         if (Files.notExists(configDirectory)) {
-            try {
-                Files.createDirectory(configDirectory);
-            } catch (IOException e) {
-                throw new FileSystemException(configDirectory, e);
-            }
+            createDirectory(configDirectory);
         }
 
         System.out.println("=== PREPARING SERVE.CFG ===");
         Path configPath = Paths.get(configDirectory.toString(), "serve.cfg");
         if (Files.exists(configPath)) {
-            try {
-                Files.deleteIfExists(Paths.get(configDirectory.toString(), "serve.cfg.old"));
-            } catch (IOException e) {
-                throw new FileSystemException(Paths.get(configDirectory.toString(), "serve.cfg.old"), e);
-            }
-
-            try {
-                Files.move(configPath, Paths.get(configDirectory.toString(), "serve.cfg.old"));
-            } catch (IOException e) {
-                throw new FileSystemException(configPath, Paths.get(configDirectory.toString(), "serve.cfg.old"), e);
-            }
+            deleteFile(Paths.get(configDirectory.toString(), "serve.cfg.old"));
+            moveFile(configPath, Paths.get(configDirectory.toString(), "serve.cfg.old"));
         }
 
         StringBuilder serveCfg = new StringBuilder();
-        try (BufferedReader reader = new BufferedReader(new FileReader(defaultConfig.toFile()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                serveCfg.append(line).append("\n");
-            }
-        } catch (IOException e) {
-            throw new FileSystemException(defaultConfig, e);
-        }
-
-        serveCfg.append("\n");
+        serveCfg.append(readFile(defaultConfig)).append("\n");
 
         for (Problem problem : problems) {
             Path problemCfgPath = Paths.get(problemsDirectory.toString(), problem.getName(), "problem.cfg");
-
-            try (BufferedReader reader = new BufferedReader(new FileReader(problemCfgPath.toFile()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    serveCfg.append(line).append("\n");
-                }
-            } catch (IOException e) {
-                throw new FileSystemException(problemCfgPath, e);
-            }
-
-            serveCfg.append("\n");
+            serveCfg.append(readFile(problemCfgPath)).append("\n");
         }
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(configPath.toFile()))) {
-            writer.write(serveCfg.toString());
-        } catch (IOException e) {
-            throw new FileSystemException(configPath, e);
-        }
-
+        writeFile(configPath, serveCfg.toString());
         System.out.println("Done!");
     }
 
@@ -169,11 +124,7 @@ public class ContestUtils {
         }
 
         System.out.println("Deleting archive file");
-        try {
-            Files.delete(archivePath);
-        } catch (IOException e) {
-            throw new FileSystemException(archivePath, e);
-        }
+        deleteFile(archivePath);
 
         return packageId;
     }
@@ -193,12 +144,7 @@ public class ContestUtils {
             Path fromPath = Paths.get(problemDirectory.toString(), curFile);
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
 
-            try {
-                System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
-                Files.copy(fromPath, toPath);
-            } catch (IOException e) {
-                throw new FileSystemException(fromPath, toPath, e);
-            }
+            copyFile(fromPath, toPath);
         }
 
         for (int i = 0; i < executables.getLength(); i++) {
@@ -208,13 +154,7 @@ public class ContestUtils {
             Path fromPath = Paths.get(problemDirectory.toString(), curFile);
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
 
-            try {
-                System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
-                Files.copy(fromPath, toPath);
-            } catch (IOException e) {
-                throw new FileSystemException(fromPath, toPath, e);
-            }
-
+            copyFile(fromPath, toPath);
             compileCode(toPath, true);
         }
     }
@@ -223,12 +163,7 @@ public class ContestUtils {
         System.out.println("=== PREPARING TESTS ===");
 
         List<Test> allTests = new ArrayList<>();
-
-        try {
-            Files.createDirectory(Paths.get(problemDirectory.getParent().toString(), "tests"));
-        } catch (IOException e) {
-            throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), "tests"), e);
-        }
+        createDirectory(Paths.get(problemDirectory.getParent().toString(), "tests"));
 
         Document document = getProblemXML(problemDirectory);
 
@@ -269,42 +204,23 @@ public class ContestUtils {
                 Path to = Paths.get(problemDirectory.getParent().toString(), "tests",
                         String.format(testNameFormat, i + 1));
 
-                try {
-                    Files.copy(from, to);
-                } catch (IOException e) {
-                    throw new FileSystemException(from, to, e);
-                }
+                copyFile(from, to);
 
                 continue;
             }
 
             System.out.println("Generating test #" + (i + 1));
 
-            Path testFile;
-            try {
-                testFile = Files.createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
-                        String.format(testNameFormat, i + 1)));
-            } catch (IOException e) {
-                throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), "tests",
-                        String.format(testNameFormat, i + 1)), e);
-            }
-
+            Path testFile = createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
+                    String.format(testNameFormat, i + 1)));
             executeScript(test.getAttribute("cmd"), problemDirectory.getParent(), null, testFile);
 
             if (fromFile != null) {
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
                 Path to = testFile.toAbsolutePath();
 
-                try {
-                    Files.delete(to);
-                } catch (IOException e) {
-                    throw new FileSystemException(to, e);
-                }
-                try {
-                    Files.move(from, to);
-                } catch (IOException e) {
-                    throw new FileSystemException(from, to, e);
-                }
+                deleteFile(to);
+                moveFile(from, to);
             }
         }
 
@@ -314,11 +230,7 @@ public class ContestUtils {
             if (test.hasAttribute("from-file")) {
                 String fromFile = test.getAttribute("from-file");
 
-                try {
-                    Files.deleteIfExists(Paths.get(problemDirectory.getParent().toString(), fromFile));
-                } catch (IOException e) {
-                    throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), fromFile), e);
-                }
+                deleteFile(Paths.get(problemDirectory.getParent().toString(), fromFile));
             }
         }
 
@@ -346,22 +258,9 @@ public class ContestUtils {
         Path checkerTo = Paths.get(problemDirectory.getParent().toString(), checkerFrom.getFileName().toString());
         String fileWithoutExtension = removeExtension(checkerTo.getFileName().toString());
 
-        try {
-            Files.deleteIfExists(checkerTo);
-        } catch (IOException e) {
-            throw new FileSystemException(checkerTo, e);
-        }
-        try {
-            Files.deleteIfExists(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
-        } catch (IOException e) {
-            throw new FileSystemException(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
-        }
-
-        try {
-            Files.copy(checkerFrom, checkerTo);
-        } catch (IOException e) {
-            throw new FileSystemException(checkerFrom, checkerTo, e);
-        }
+        deleteFile(checkerTo);
+        deleteFile(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
+        copyFile(checkerFrom, checkerTo);
 
         compileCode(checkerTo, true);
 
@@ -378,12 +277,7 @@ public class ContestUtils {
         Path from = Paths.get(problemDirectory.toString(), solutionDir);
         Path to = Paths.get(problemDirectory.getParent().toString(), from.getFileName().toString());
 
-        try {
-            Files.copy(from, to);
-        } catch (IOException e) {
-            throw new FileSystemException(from, to, e);
-        }
-
+        copyFile(from, to);
         compileCode(to, false);
 
         Path testsDir = Paths.get(problemDirectory.getParent().toString(), "tests");
@@ -392,12 +286,7 @@ public class ContestUtils {
             Path inputFile = Paths.get(testsDir.toString(), String.format(testNameFormat, i + 1));
             Path outputFile = Paths.get(testsDir.toString(), String.format(testNameFormat + ".a", i + 1));
 
-            try {
-                Files.createFile(outputFile);
-            } catch (IOException e) {
-                throw new FileSystemException(outputFile, e);
-            }
-
+            createFile(outputFile);
             executeScript(removeExtension(to.getFileName().toString()), problemDirectory.getParent(), inputFile, outputFile);
         }
     }
@@ -459,16 +348,11 @@ public class ContestUtils {
     private static void prepareGroups(final Path problemDirectory, final List<Group> groups) throws ContestException {
         System.out.println("=== GENERATING VALUER.CFG ===");
 
-        StringBuilder res = new StringBuilder();
-        res.append("global {\n\tstat_to_users;\n}\n");
-        res.append(groups.stream().map(Group::toString).collect(Collectors.joining("\n")));
         Path valuerPath = Paths.get(problemDirectory.getParent().toString(), "valuer.cfg");
 
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(valuerPath.toFile()))) {
-            writer.write(res.toString());
-        } catch (IOException e) {
-            throw new FileSystemException(valuerPath, e);
-        }
+        String res = "global {\n\tstat_to_users;\n}\n" +
+                groups.stream().map(Group::toString).collect(Collectors.joining("\n"));
+        writeFile(valuerPath, res);
     }
 
     private static void cleanUp(final Path problemDirectory) throws ContestException {
@@ -571,11 +455,7 @@ public class ContestUtils {
         res.append("normalization = \"nl\"\n");
 
         Path configPath = Paths.get(problemDirectory.getParent().toString(), "problem.cfg");
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(configPath.toFile()))) {
-            writer.write(res.toString());
-        } catch (IOException e) {
-            throw new FileSystemException(configPath, e);
-        }
+        writeFile(configPath, res.toString());
     }
 
     private static Document getProblemXML(final Path problemDirectory) throws ContestException {
@@ -625,7 +505,8 @@ public class ContestUtils {
     private static void compileCode(final Path sourcePath, final boolean isScript) throws ContestException {
         System.out.println("Compiling " + sourcePath.getFileName());
 
-        String command = String.format("g++ -o %s %s -std=c++17", removeExtension(sourcePath.getFileName().toString()),
+        String command = String.format("g++ -o %s %s -std=c++17",
+                removeExtension(sourcePath.getFileName().toString()),
                 sourcePath.getFileName().toString());
         if (!isScript) {
             command += " -O2";
@@ -641,6 +522,80 @@ public class ContestUtils {
             }
         } catch (IOException | InterruptedException e) {
             throw new ScriptException(command, e);
+        }
+    }
+
+    private static void copyFile(final Path from, final Path to) throws ContestException {
+        System.out.printf("Copying %s to %s\n", from.toString(), to.toString());
+
+        try {
+            Files.copy(from, to);
+        } catch (IOException e) {
+            throw new FileSystemException(from, to, e);
+        }
+    }
+
+    private static void moveFile(final Path from, final Path to) throws ContestException {
+        System.out.printf("Moving %s to %s\n", from.toString(), to.toString());
+
+        try {
+            Files.move(from, to);
+        } catch (IOException e) {
+            throw new FileSystemException(from, to, e);
+        }
+    }
+
+    private static void deleteFile(final Path path) throws ContestException {
+        System.out.printf("Deleting %s\n", path.toString());
+
+        try {
+            Files.deleteIfExists(path);
+        } catch (IOException e) {
+            throw new FileSystemException(path, e);
+        }
+    }
+
+    private static Path createFile(final Path path) throws ContestException {
+        System.out.printf("Creating file %s\n", path.toString());
+
+        try {
+            return Files.createFile(path);
+        } catch (IOException e) {
+            throw new FileSystemException(path, e);
+        }
+    }
+
+    private static void createDirectory(final Path path) throws ContestException {
+        System.out.printf("Creating %s directory\n", path.toString());
+
+        try {
+            Files.createDirectory(path);
+        } catch (IOException e) {
+            throw new FileSystemException(path, e);
+        }
+    }
+
+    private static String readFile(final Path path) throws ContestException {
+        StringBuilder res = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
+            char[] buffer = new char[1 << 16];
+            int cnt;
+            while ((cnt = reader.read(buffer)) != -1) {
+                res.append(buffer, 0, cnt);
+            }
+        } catch (IOException e) {
+            throw new FileSystemException(path, e);
+        }
+
+        return res.toString();
+    }
+
+    private static void writeFile(final Path path, final String data) throws ContestException {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toFile()))) {
+            writer.write(data);
+        } catch (IOException e) {
+            throw new FileSystemException(path, e);
         }
     }
 }
