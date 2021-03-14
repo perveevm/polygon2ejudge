@@ -3,7 +3,8 @@ package ru.strategy48.ejudge.polygon2ejudge;
 import org.apache.commons.cli.*;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
-import ru.strategy48.ejudge.polygon2ejudge.contest.ContestException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ConfigurationException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.ContestUtils;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
@@ -78,7 +79,7 @@ public class Main {
         }
     }
 
-    private static PolygonSession getPolygonSession() throws IOException {
+    private static PolygonSession getPolygonSession() throws ContestException {
         String key, secret;
 
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -90,7 +91,7 @@ public class Main {
             key = document.getElementsByTagName("key").item(0).getTextContent();
             secret = document.getElementsByTagName("secret").item(0).getTextContent();
         } catch (ParserConfigurationException | IOException | SAXException e) {
-            throw new IOException("Error happened while parsing credentials file: " + e.getMessage(), e);
+            throw new ConfigurationException(credentialsFile, e);
         }
 
         return new PolygonSession(key, secret);

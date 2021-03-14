@@ -5,6 +5,10 @@ import org.apache.http.NameValuePair;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * @author Perveev Mike (perveev_m@mail.ru)
+ * Describes {@link Exception} thrown while request parameters are incorrect
+ */
 public class IncorrectParametersException extends PolygonException {
     private final List<NameValuePair> parameters;
 

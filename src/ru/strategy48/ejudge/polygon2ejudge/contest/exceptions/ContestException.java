@@ -1,4 +1,4 @@
-package ru.strategy48.ejudge.polygon2ejudge.contest;
+package ru.strategy48.ejudge.polygon2ejudge.contest.exceptions;
 
 /**
  * @author Perveev Mike (perveev_m@mail.ru)

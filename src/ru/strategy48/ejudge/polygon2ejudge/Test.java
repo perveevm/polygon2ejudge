@@ -1,6 +1,6 @@
 package ru.strategy48.ejudge.polygon2ejudge;
 
-import ru.strategy48.ejudge.polygon2ejudge.contest.ContestException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.ContestUtils;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;

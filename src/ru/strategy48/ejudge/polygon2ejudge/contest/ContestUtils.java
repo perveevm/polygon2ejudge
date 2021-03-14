@@ -6,7 +6,11 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ConfigurationException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.FileSystemException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ScriptException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
@@ -40,7 +44,7 @@ public class ContestUtils {
             try {
                 Files.createDirectory(problemsDirectory);
             } catch (IOException e) {
-                throw new ContestException("Couldn't create problems directory: " + e.getMessage(), e);
+                throw new FileSystemException(problemsDirectory, e);
             }
         }
 
@@ -50,7 +54,7 @@ public class ContestUtils {
             try {
                 Files.createDirectory(problemPath);
             } catch (IOException e) {
-                throw new ContestException("Couldn't create directory for problem: " + e.getMessage(), e);
+                throw new FileSystemException(problemPath, e);
             }
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
@@ -62,7 +66,7 @@ public class ContestUtils {
             try {
                 Files.createDirectory(configDirectory);
             } catch (IOException e) {
-                throw new ContestException("Couldn't create conf directory: " + e.getMessage(), e);
+                throw new FileSystemException(configDirectory, e);
             }
         }
 
@@ -71,9 +75,14 @@ public class ContestUtils {
         if (Files.exists(configPath)) {
             try {
                 Files.deleteIfExists(Paths.get(configDirectory.toString(), "serve.cfg.old"));
+            } catch (IOException e) {
+                throw new FileSystemException(Paths.get(configDirectory.toString(), "serve.cfg.old"), e);
+            }
+
+            try {
                 Files.move(configPath, Paths.get(configDirectory.toString(), "serve.cfg.old"));
             } catch (IOException e) {
-                throw new ContestException("Can't create serve.cfg file: " + e.getMessage(), e);
+                throw new FileSystemException(configPath, Paths.get(configDirectory.toString(), "serve.cfg.old"), e);
             }
         }
 
@@ -84,7 +93,7 @@ public class ContestUtils {
                 serveCfg.append(line).append("\n");
             }
         } catch (IOException e) {
-            throw new ContestException("Can't read default config file: " + e.getMessage(), e);
+            throw new FileSystemException(defaultConfig, e);
         }
 
         serveCfg.append("\n");
@@ -98,7 +107,7 @@ public class ContestUtils {
                     serveCfg.append(line).append("\n");
                 }
             } catch (IOException e) {
-                throw new ContestException("Can't read problem.cfg file: " + e.getMessage(), e);
+                throw new FileSystemException(problemCfgPath, e);
             }
 
             serveCfg.append("\n");
@@ -107,7 +116,7 @@ public class ContestUtils {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(configPath.toFile()))) {
             writer.write(serveCfg.toString());
         } catch (IOException e) {
-            throw new ContestException("Can't write serve.cfg file: " + e.getMessage(), e);
+            throw new FileSystemException(configPath, e);
         }
 
         System.out.println("Done!");
@@ -156,14 +165,14 @@ public class ContestUtils {
             ZipFile zipFile = new ZipFile(archivePath.toFile());
             zipFile.extractAll(Paths.get(problemDirectory.toString(), String.valueOf(packageId)).toString());
         } catch (IOException e) {
-            throw new ContestException("Error happened while extracting archive file: " + e.getMessage(), e);
+            throw new FileSystemException(archivePath, e);
         }
 
         System.out.println("Deleting archive file");
         try {
             Files.delete(archivePath);
         } catch (IOException e) {
-            throw new ContestException("Error happened while deleting archive file: " + e.getMessage(), e);
+            throw new FileSystemException(archivePath, e);
         }
 
         return packageId;
@@ -188,7 +197,7 @@ public class ContestUtils {
                 System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
                 Files.copy(fromPath, toPath);
             } catch (IOException e) {
-                throw new ContestException("Error happened while copying resource files: " + e.getMessage(), e);
+                throw new FileSystemException(fromPath, toPath, e);
             }
         }
 
@@ -203,7 +212,7 @@ public class ContestUtils {
                 System.out.printf("Copying %s to %s\n", fromPath.toString(), toPath.toString());
                 Files.copy(fromPath, toPath);
             } catch (IOException e) {
-                throw new ContestException("Error happened while copying file: " + e.getMessage(), e);
+                throw new FileSystemException(fromPath, toPath, e);
             }
 
             compileCode(toPath, true);
@@ -218,7 +227,7 @@ public class ContestUtils {
         try {
             Files.createDirectory(Paths.get(problemDirectory.getParent().toString(), "tests"));
         } catch (IOException e) {
-            throw new ContestException("Couldn't create tests directory: " + e.getMessage(), e);
+            throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), "tests"), e);
         }
 
         Document document = getProblemXML(problemDirectory);
@@ -263,7 +272,7 @@ public class ContestUtils {
                 try {
                     Files.copy(from, to);
                 } catch (IOException e) {
-                    throw new ContestException("Can't copy manual test input file: " + e.getMessage(), e);
+                    throw new FileSystemException(from, to, e);
                 }
 
                 continue;
@@ -282,7 +291,8 @@ public class ContestUtils {
                 testFile = Files.createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
                         String.format(testNameFormat, i + 1)));
             } catch (IOException e) {
-                throw new ContestException("Couldn't create input file for test: " + e.getMessage(), e);
+                throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), "tests",
+                        String.format(testNameFormat, i + 1)), e);
             }
 
             try {
@@ -297,17 +307,26 @@ public class ContestUtils {
                 int exitCode = generation.waitFor();
 
                 if (exitCode != 0) {
-                    throw new ContestException("Can't generate input file, exit code is " + exitCode);
-                }
-
-                if (fromFile != null) {
-                    Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
-                    Path to = testFile.toAbsolutePath();
-                    Files.delete(to);
-                    Files.move(from, to);
+                    throw new ScriptException(String.join(" ", args));
                 }
             } catch (InterruptedException | IOException e) {
-                throw new ContestException("Can't generate input file: " + e.getMessage(), e);
+                throw new ScriptException(String.join(" ", args), e);
+            }
+
+            if (fromFile != null) {
+                Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
+                Path to = testFile.toAbsolutePath();
+
+                try {
+                    Files.delete(to);
+                } catch (IOException e) {
+                    throw new FileSystemException(to, e);
+                }
+                try {
+                    Files.move(from, to);
+                } catch (IOException e) {
+                    throw new FileSystemException(from, to, e);
+                }
             }
         }
 
@@ -320,7 +339,7 @@ public class ContestUtils {
                 try {
                     Files.deleteIfExists(Paths.get(problemDirectory.getParent().toString(), fromFile));
                 } catch (IOException e) {
-                    throw new ContestException("Couldn't delete temporary file: " + e.getMessage(), e);
+                    throw new FileSystemException(Paths.get(problemDirectory.getParent().toString(), fromFile), e);
                 }
             }
         }
@@ -352,15 +371,19 @@ public class ContestUtils {
 
         try {
             Files.deleteIfExists(checkerTo);
+        } catch (IOException e) {
+            throw new FileSystemException(checkerTo, e);
+        }
+        try {
             Files.deleteIfExists(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
         } catch (IOException e) {
-            throw new ContestException("Couldn't erase old checker files: " + e.getMessage(), e);
+            throw new FileSystemException(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
         }
 
         try {
             Files.copy(checkerFrom, checkerTo);
         } catch (IOException e) {
-            throw new ContestException("Couldn't copy checker: " + e.getMessage(), e);
+            throw new FileSystemException(checkerFrom, checkerTo, e);
         }
 
         compileCode(checkerTo, true);
@@ -381,7 +404,7 @@ public class ContestUtils {
         try {
             Files.copy(from, to);
         } catch (IOException e) {
-            throw new ContestException("Couldn't copy solution file: " + e.getMessage(), e);
+            throw new FileSystemException(from, to, e);
         }
 
         compileCode(to, false);
@@ -395,7 +418,7 @@ public class ContestUtils {
             try {
                 Files.createFile(outputFile);
             } catch (IOException e) {
-                throw new ContestException("Couldn't create output file: " + e.getMessage(), e);
+                throw new FileSystemException(outputFile, e);
             }
 
             List<String> args = new ArrayList<>();
@@ -416,10 +439,10 @@ public class ContestUtils {
                 int exitCode = solving.waitFor();
 
                 if (exitCode != 0) {
-                    throw new ContestException("Couldn't generate output file, exit code is " + exitCode);
+                    throw new ScriptException(String.join(" ", args));
                 }
             } catch (IOException | InterruptedException e) {
-                throw new ContestException("Couldn't generate output file: " + e.getMessage(), e);
+                throw new ScriptException(String.join(" ", args), e);
             }
         }
     }
@@ -449,7 +472,8 @@ public class ContestUtils {
             System.out.println("Parsing group #" + id);
 
             if (group.getElementsByTagName("dependencies").getLength() != 0) {
-                NodeList dependenciesList = ((Element) group.getElementsByTagName("dependencies").item(0)).getElementsByTagName("dependency");
+                NodeList dependenciesList = ((Element) group.getElementsByTagName("dependencies").item(0))
+                        .getElementsByTagName("dependency");
                 dependencies = new ArrayList<>();
 
                 for (int j = 0; j < dependenciesList.getLength(); j++) {
@@ -488,7 +512,7 @@ public class ContestUtils {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(valuerPath.toFile()))) {
             writer.write(res.toString());
         } catch (IOException e) {
-            throw new ContestException("Couldn't write valuer.cfg file: " + e.getMessage(), e);
+            throw new FileSystemException(valuerPath, e);
         }
     }
 
@@ -498,7 +522,7 @@ public class ContestUtils {
         try {
             FileUtils.deleteDirectory(problemDirectory.toFile());
         } catch (IOException e) {
-            throw new ContestException("Error happened while cleaning up: " + e.getMessage(), e);
+            throw new FileSystemException(problemDirectory, e);
         }
     }
 
@@ -513,9 +537,9 @@ public class ContestUtils {
         NodeList names = ((Element) document.getElementsByTagName("names").item(0)).getElementsByTagName("name");
         Element testset = (Element) ((Element) document.getElementsByTagName("judging").item(0))
                 .getElementsByTagName("testset").item(0);
-        String checkerName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0))
-                .getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0))
-                .getAttribute("path")).getFileName().toString();
+        String checkerName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
+                item(0)).getElementsByTagName("checker").item(0)).getElementsByTagName("source").
+                item(0)).getAttribute("path")).getFileName().toString();
         checkerName = checkerName.substring(0, checkerName.indexOf('.'));
         String longName = ((Element) names.item(0)).getAttribute("value");
         String testFormat = "%02d";
@@ -595,7 +619,7 @@ public class ContestUtils {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(configPath.toFile()))) {
             writer.write(res.toString());
         } catch (IOException e) {
-            throw new ContestException("Couldn't write problem.cfg file: " + e.getMessage(), e);
+            throw new FileSystemException(configPath, e);
         }
     }
 
@@ -607,7 +631,7 @@ public class ContestUtils {
             document.getDocumentElement().normalize();
             return document;
         } catch (ParserConfigurationException | IOException | SAXException e) {
-            throw new ContestException("Error happened while parsing problem.xml: " + e.getMessage(), e);
+            throw new ConfigurationException(Paths.get(problemDirectory.toString(), "problem.xml"), e);
         }
     }
 
@@ -618,7 +642,8 @@ public class ContestUtils {
     private static void compileCode(final Path sourcePath, final boolean isScript) throws ContestException {
         System.out.println("Compiling " + sourcePath.getFileName());
 
-        String command = String.format("g++ -o %s %s -std=c++17", removeExtension(sourcePath.getFileName().toString()), sourcePath.getFileName().toString());
+        String command = String.format("g++ -o %s %s -std=c++17", removeExtension(sourcePath.getFileName().toString()),
+                sourcePath.getFileName().toString());
         if (!isScript) {
             command += " -O2";
         } else {
@@ -629,10 +654,10 @@ public class ContestUtils {
             Process compilation = Runtime.getRuntime().exec(command, null, sourcePath.getParent().toFile());
             int exitCode = compilation.waitFor();
             if (exitCode != 0) {
-                throw new ContestException("Error happened while compiling file, exit code is " + exitCode);
+                throw new ScriptException(command);
             }
         } catch (IOException | InterruptedException e) {
-            throw new ContestException("Couldn't compile solution file: " + e.getMessage(), e);
+            throw new ScriptException(command, e);
         }
     }
 }

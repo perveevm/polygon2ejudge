@@ -1,5 +1,9 @@
 package ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions;
 
+/**
+ * @author Perveev Mike (perveev_m@mail.ru)
+ * Describes {@link Exception} thrown if given Polygon response is bad
+ */
 public class ResponseException extends PolygonException {
     public ResponseException(final String method) {
         super("error happened while getting response from API method " + method);
