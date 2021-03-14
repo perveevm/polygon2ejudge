@@ -599,6 +599,8 @@ public class ContestUtils {
     }
 
     private static String readFile(final Path path) throws ContestException {
+        System.out.printf("Reading file %s\n", path.toString());
+
         StringBuilder res = new StringBuilder();
 
         try (BufferedReader reader = new BufferedReader(new FileReader(path.toFile()))) {
@@ -615,6 +617,8 @@ public class ContestUtils {
     }
 
     private static void writeFile(final Path path, final String data) throws ContestException {
+        System.out.printf("Writing file %s\n", path.toString());
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toFile()))) {
             writer.write(data);
         } catch (IOException e) {
