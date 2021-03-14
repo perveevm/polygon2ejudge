@@ -12,6 +12,10 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.ConnectionError;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.IncorrectParametersException;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.ResponseException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Problem;
 
@@ -46,7 +50,7 @@ public class PolygonSession implements AutoCloseable {
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() throws IOException {
         client.close();
     }
 
@@ -73,15 +77,15 @@ public class PolygonSession implements AutoCloseable {
                 outputStream.write(c);
             }
         } catch (FileNotFoundException e) {
-            throw new PolygonException("Couldn't create archive file: " + e.getMessage(), e);
+            throw new PolygonException("couldn't create archive file (" + e.getMessage() + ")", e);
         } catch (IOException e) {
-            throw new PolygonException("Couldn't write or close archive file: " + e.getMessage(), e);
+            throw new PolygonException("couldn't write or close archive file (" + e.getMessage() + ")", e);
         }
 
         try {
             inputStream.close();
         } catch (IOException e) {
-            throw new PolygonException("Couldn't close input stream with archive file: " + e.getMessage(), e);
+            throw new PolygonException("couldn't close input stream with archive file (" + e.getMessage() + ")", e);
         }
         
         return filePath;
@@ -131,7 +135,7 @@ public class PolygonSession implements AutoCloseable {
             checkJSONResponse(jsonResponse);
             return jsonResponse.getJSONArray("result");
         } catch (IOException e) {
-            throw new PolygonException("Error happened while decoding response to string: " + e.getMessage(), e);
+            throw new ResponseException(method, e);
         }
     }
 
@@ -143,22 +147,22 @@ public class PolygonSession implements AutoCloseable {
             checkJSONResponse(jsonResponse);
             return jsonResponse.getJSONObject("result");
         } catch (IOException e) {
-            throw new PolygonException("Error happened while decoding response to string: " + e.getMessage(), e);
+            throw new ResponseException(method, e);
         }
     }
 
     private void checkJSONResponse(final JSONObject jsonResponse) throws PolygonException {
         if (jsonResponse == null) {
-            throw new PolygonException("Given JSON response is null");
+            throw new ResponseException("Given JSON response is null", "null");
         }
         if (!jsonResponse.keySet().contains("status")) {
-            throw new PolygonException("Given JSON doesn't have status field");
+            throw new ResponseException("Given JSON doesn't have status field", jsonResponse.toString());
         }
         if (!jsonResponse.get("status").equals("OK")) {
-            throw new PolygonException("Given JSON status isn't OK, it's: " + jsonResponse.getString("status"));
+            throw new ResponseException("Given JSON status is " + jsonResponse.getString("status"), jsonResponse.toString());
         }
         if (!jsonResponse.keySet().contains("result")) {
-            throw new PolygonException("Given JSON doesn't have result field");
+            throw new ResponseException("Given JSON doesn't have result field", jsonResponse.toString());
         }
     }
 
@@ -168,7 +172,7 @@ public class PolygonSession implements AutoCloseable {
         try {
             return new BufferedInputStream(response.getContent());
         } catch (IOException e) {
-            throw new PolygonException("Error happened while getting response content: " + e.getMessage(), e);
+            throw new ResponseException(method, e);
         }
     }
 
@@ -190,14 +194,14 @@ public class PolygonSession implements AutoCloseable {
         try {
             post.setEntity(new UrlEncodedFormEntity(parameters));
         } catch (UnsupportedEncodingException e) {
-            throw new PolygonException("Error happened while encoding POST parameters: " + e.getMessage(), e);
+            throw new IncorrectParametersException(parameters);
         }
 
         try {
             CloseableHttpResponse response = client.execute(post);
             return response.getEntity();
         } catch (IOException e) {
-            throw new PolygonException("Error happened while sending POST: " + e.getMessage(), e);
+            throw new ConnectionError(url, e);
         }
     }
 

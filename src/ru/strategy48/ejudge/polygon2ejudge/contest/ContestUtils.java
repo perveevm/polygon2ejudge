@@ -8,7 +8,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
-import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonException;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Problem;
 

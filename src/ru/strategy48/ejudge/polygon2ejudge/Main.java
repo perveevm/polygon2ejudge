@@ -3,7 +3,9 @@ package ru.strategy48.ejudge.polygon2ejudge;
 import org.apache.commons.cli.*;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.ContestUtils;
+import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -62,10 +64,16 @@ public class Main {
             ContestUtils.prepareContest(session, contestId, contestDirectory,
                     "Generic", defaultConfigFile);
         } catch (IOException e) {
-            System.out.println("Error happened while reading credentials file: " + e.getMessage());
+            System.out.println("Error happened while reading credentials file!");
+            System.out.println(e.getMessage());
             e.printStackTrace();
-        } catch (Exception e) {
-            System.out.println("Error happened while working with Polygon: " + e.getMessage());
+        } catch (PolygonException e) {
+            System.out.println("Error happened while working with Polygon!");
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        } catch (ContestException e) {
+            System.out.println("Error happened while preparing contest files!");
+            System.out.println(e.getMessage());
             e.printStackTrace();
         }
     }
