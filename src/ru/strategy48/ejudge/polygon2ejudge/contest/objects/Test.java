@@ -12,9 +12,10 @@ public class Test {
 
     /**
      * Constructs test by given parameters
-     * @param id test ID
-     * @param group given test group ID
-     * @param points score of given test
+     *
+     * @param id       test ID
+     * @param group    given test group ID
+     * @param points   score of given test
      * @param isSample if given test is sample
      */
     public Test(final int id, final int group, final int points, final boolean isSample) {

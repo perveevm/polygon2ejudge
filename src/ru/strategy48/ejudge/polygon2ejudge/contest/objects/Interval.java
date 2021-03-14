@@ -10,8 +10,9 @@ public class Interval {
 
     /**
      * Constructs interval by two points
+     *
      * @param from begin of the interval
-     * @param to end of the interval
+     * @param to   end of the interval
      */
     public Interval(final int from, final int to) {
         this.from = from;

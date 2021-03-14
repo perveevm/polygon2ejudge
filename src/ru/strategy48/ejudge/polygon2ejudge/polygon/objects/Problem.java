@@ -15,7 +15,7 @@ public class Problem {
     private final boolean modified;
 
     public Problem(final int id, final String owner, final String name, final boolean deleted, final boolean favourite,
-                    final int revision, final int latestPackage, final boolean modified) {
+                   final int revision, final int latestPackage, final boolean modified) {
         this.id = id;
         this.owner = owner;
         this.name = name;

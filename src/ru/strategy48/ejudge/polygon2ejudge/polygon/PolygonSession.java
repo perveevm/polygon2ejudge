@@ -41,7 +41,8 @@ public class PolygonSession implements AutoCloseable {
 
     /**
      * Constructs Polygon session
-     * @param key API key
+     *
+     * @param key    API key
      * @param secret API secret value
      */
     public PolygonSession(final String key, final String secret) {
@@ -56,9 +57,10 @@ public class PolygonSession implements AutoCloseable {
 
     /**
      * Saves problem package provided as .zip archive to given path
+     *
      * @param problemId problem ID
      * @param packageId package ID
-     * @param path directory to save archive
+     * @param path      directory to save archive
      * @return {@link Path} to saved archive
      * @throws PolygonException if something went wrong while working with API
      */
@@ -87,12 +89,13 @@ public class PolygonSession implements AutoCloseable {
         } catch (IOException e) {
             throw new PolygonException("couldn't close input stream with archive file (" + e.getMessage() + ")", e);
         }
-        
+
         return filePath;
     }
 
     /**
      * Gets {@link List} of problems in given contest
+     *
      * @param contestId contest ID
      * @return {@link List} of problems
      * @throws PolygonException if something went wrong while working with API
@@ -111,6 +114,7 @@ public class PolygonSession implements AutoCloseable {
 
     /**
      * Gets {@link List} of packages for given problem
+     *
      * @param problemId problem ID
      * @return {@link List} of packages
      * @throws PolygonException if something went wrong while working with API

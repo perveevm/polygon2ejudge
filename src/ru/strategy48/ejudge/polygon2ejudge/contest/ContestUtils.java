@@ -35,11 +35,12 @@ import java.util.stream.Collectors;
 public class ContestUtils {
     /**
      * Prepares contest: prepares all problems and generates serve.cfg
-     * @param session Polygon session for API usage
-     * @param contestId contest ID in Polygon
-     * @param contestDirectory contest directory (there will be created <code>problems</code> directory in it)
+     *
+     * @param session            Polygon session for API usage
+     * @param contestId          contest ID in Polygon
+     * @param contestDirectory   contest directory (there will be created <code>problems</code> directory in it)
      * @param genericProblemName generic problem name in default config file
-     * @param defaultConfig default serve.cfg config path
+     * @param defaultConfig      default serve.cfg config path
      * @throws PolygonException if error happened while working with Polygon API
      * @throws ContestException if error happened while preparing contest
      */
@@ -60,7 +61,7 @@ public class ContestUtils {
             createDirectory(problemPath);
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
-                    String.valueOf((char)('A' + ejudgeProblemId - 1)));
+                    String.valueOf((char) ('A' + ejudgeProblemId - 1)));
         }
 
         Path configDirectory = Paths.get(contestDirectory.toString(), "conf");
@@ -89,12 +90,13 @@ public class ContestUtils {
 
     /**
      * Prepares problem: compiles executables, generates tests and answers, generates valuer.cfg and problem.cfg
-     * @param session Polygon session
-     * @param problemId problem ID in Polygon
-     * @param problemDirectory problem directory (there will be created <code>tests</code> directory and other files)
+     *
+     * @param session            Polygon session
+     * @param problemId          problem ID in Polygon
+     * @param problemDirectory   problem directory (there will be created <code>tests</code> directory and other files)
      * @param genericProblemName generic problem name in default eJudge config
-     * @param ejudgeProblemId problem ID in contest
-     * @param shortName short problem name (for example A, B, C, etc.)
+     * @param ejudgeProblemId    problem ID in contest
+     * @param shortName          short problem name (for example A, B, C, etc.)
      * @throws PolygonException if error happened while working with Polygon API
      * @throws ContestException if error happened while preparing problem
      */

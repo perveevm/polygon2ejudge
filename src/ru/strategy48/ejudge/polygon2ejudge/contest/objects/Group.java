@@ -22,11 +22,12 @@ public class Group {
 
     /**
      * Constructs group from parameters provided by Polygon
-     * @param id given group ID
-     * @param tests {@link List} of tests in given group
-     * @param dependencies {@link List} of dependencies for given group
+     *
+     * @param id             given group ID
+     * @param tests          {@link List} of tests in given group
+     * @param dependencies   {@link List} of dependencies for given group
      * @param feedbackPolicy feedback policy for given group
-     * @param pointsPolicy scoring policy for given group
+     * @param pointsPolicy   scoring policy for given group
      */
     public Group(final int id, final List<Test> tests, final List<Integer> dependencies,
                  final FeedbackPolicy feedbackPolicy, final PointsPolicy pointsPolicy) {
@@ -76,6 +77,7 @@ public class Group {
 
     /**
      * Transforms group to eJudge gvaluer-readable format
+     *
      * @return {@link String} in gvaluer-readable format
      */
     @Override
