@@ -33,6 +33,16 @@ import java.util.stream.Collectors;
  * Provides methods for configuring problems and contests
  */
 public class ContestUtils {
+    /**
+     * Prepares contest: prepares all problems and generates serve.cfg
+     * @param session Polygon session for API usage
+     * @param contestId contest ID in Polygon
+     * @param contestDirectory contest directory (there will be created <code>problems</code> directory in it)
+     * @param genericProblemName generic problem name in default config file
+     * @param defaultConfig default serve.cfg config path
+     * @throws PolygonException if error happened while working with Polygon API
+     * @throws ContestException if error happened while preparing contest
+     */
     public static void prepareContest(final PolygonSession session, final int contestId, final Path contestDirectory,
                                       final String genericProblemName, final Path defaultConfig)
             throws PolygonException, ContestException {
@@ -77,6 +87,17 @@ public class ContestUtils {
         System.out.println("Done!");
     }
 
+    /**
+     * Prepares problem: compiles executables, generates tests and answers, generates valuer.cfg and problem.cfg
+     * @param session Polygon session
+     * @param problemId problem ID in Polygon
+     * @param problemDirectory problem directory (there will be created <code>tests</code> directory and other files)
+     * @param genericProblemName generic problem name in default eJudge config
+     * @param ejudgeProblemId problem ID in contest
+     * @param shortName short problem name (for example A, B, C, etc.)
+     * @throws PolygonException if error happened while working with Polygon API
+     * @throws ContestException if error happened while preparing problem
+     */
     public static void prepareProblem(final PolygonSession session, final int problemId, final Path problemDirectory,
                                       final String genericProblemName, final int ejudgeProblemId, final String shortName)
             throws PolygonException, ContestException {
