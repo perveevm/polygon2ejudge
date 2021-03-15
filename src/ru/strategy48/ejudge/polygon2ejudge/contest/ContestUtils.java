@@ -408,9 +408,12 @@ public class ContestUtils {
             interactorName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
                     item(0)).getElementsByTagName("interactor").item(0)).getElementsByTagName("source").
                     item(0)).getAttribute("path")).getFileName().toString();
+            interactorName = removeExtension(interactorName);
         }
 
-        checkerName = checkerName.substring(0, checkerName.indexOf('.'));
+        System.out.println(interactorName);
+
+        checkerName = removeExtension(checkerName);
         String longName = ((Element) names.item(0)).getAttribute("value");
         String testFormat = "%02d";
         if (allTests.size() >= 100) {
