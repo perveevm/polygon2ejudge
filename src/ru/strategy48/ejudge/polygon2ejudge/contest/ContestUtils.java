@@ -402,6 +402,14 @@ public class ContestUtils {
         String checkerName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
                 item(0)).getElementsByTagName("checker").item(0)).getElementsByTagName("source").
                 item(0)).getAttribute("path")).getFileName().toString();
+        String interactorName = null;
+        if (((Element) document.getElementsByTagName("assets").item(0)).
+                getElementsByTagName("interactor").getLength() != 0) {
+            interactorName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
+                    item(0)).getElementsByTagName("interactor").item(0)).getElementsByTagName("source").
+                    item(0)).getAttribute("path")).getFileName().toString();
+        }
+
         checkerName = checkerName.substring(0, checkerName.indexOf('.'));
         String longName = ((Element) names.item(0)).getAttribute("value");
         String testFormat = "%02d";
@@ -451,6 +459,10 @@ public class ContestUtils {
 
         res.append("standard_checker = \"\"\n");
         res.append(String.format("check_cmd = \"%s\"\n", checkerName));
+
+        if (interactorName != null) {
+            res.append(String.format("interactor_cmd = \"%s\"\n", interactorName));
+        }
 
         if (allTests.get(0).getPoints() != -1) {
             res.append(String.format("test_score_list = \"%s\"\n", allTests.stream().map(Test::getPoints).
