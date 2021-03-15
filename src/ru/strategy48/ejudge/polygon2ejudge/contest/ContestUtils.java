@@ -411,8 +411,6 @@ public class ContestUtils {
             interactorName = removeExtension(interactorName);
         }
 
-        System.out.println(interactorName);
-
         checkerName = removeExtension(checkerName);
         String longName = ((Element) names.item(0)).getAttribute("value");
         String testFormat = "%02d";
