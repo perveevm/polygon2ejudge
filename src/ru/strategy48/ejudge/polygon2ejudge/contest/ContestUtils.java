@@ -500,6 +500,8 @@ public class ContestUtils {
     private static void executeScript(final String cmd, final Path workingDirectory,
                                       final Path inputRedirection, final Path outputRedirection)
             throws ContestException {
+        System.out.println("Executing " + cmd);
+
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(List.of("bash", "-c", cmd));
         processBuilder.directory(workingDirectory.toFile());
