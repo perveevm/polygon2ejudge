@@ -6,11 +6,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ConfigurationException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.*;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
-import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
-import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.FileSystemException;
-import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ScriptException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
@@ -174,11 +171,14 @@ public class ContestUtils {
             Element executableSource = (Element) ((Element) executables.item(i))
                     .getElementsByTagName("source").item(0);
             String curFile = executableSource.getAttribute("path");
+            String curType = executableSource.getAttribute("type");
             Path fromPath = Paths.get(problemDirectory.toString(), curFile);
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
 
             copyFile(fromPath, toPath);
-            compileCode(toPath, true);
+            if (curType.contains("cpp")) {
+                compileCode(toPath, true);
+            }
         }
     }
 
@@ -278,6 +278,9 @@ public class ContestUtils {
         Path checkerFrom = Paths.get(problemDirectory.toString(), ((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0)).
                 getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
                 getAttribute("path"));
+        String checkerType = ((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0)).
+                getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
+                getAttribute("type");
         Path checkerTo = Paths.get(problemDirectory.getParent().toString(), checkerFrom.getFileName().toString());
         String fileWithoutExtension = removeExtension(checkerTo.getFileName().toString());
 
@@ -285,14 +288,21 @@ public class ContestUtils {
         deleteFile(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
         copyFile(checkerFrom, checkerTo);
 
-        compileCode(checkerTo, true);
+        if (checkerType.contains("cpp")) {
+            compileCode(checkerTo, true);
+        } else {
+            throw new UnsupportedLanguageException(checkerType);
+        }
 
         String solutionDir = null;
+        String solutionType = "";
         for (int i = 0; i < solutions.getLength(); i++) {
             Element solution = (Element) solutions.item(i);
             if (solution.getAttribute("tag").equals("main")) {
                 solutionDir = ((Element) solution.getElementsByTagName("source").item(0))
                         .getAttribute("path");
+                solutionType = ((Element) solution.getElementsByTagName("source").item(0))
+                        .getAttribute("type");
                 break;
             }
         }
@@ -301,7 +311,11 @@ public class ContestUtils {
         Path to = Paths.get(problemDirectory.getParent().toString(), from.getFileName().toString());
 
         copyFile(from, to);
-        compileCode(to, false);
+        if (solutionType.contains("cpp")) {
+            compileCode(to, false);
+        } else {
+            throw new UnsupportedLanguageException(solutionType);
+        }
 
         Path testsDir = Paths.get(problemDirectory.getParent().toString(), "tests");
         for (int i = 0; i < testCount; i++) {
