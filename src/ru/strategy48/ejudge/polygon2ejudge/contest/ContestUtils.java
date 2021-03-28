@@ -283,6 +283,15 @@ public class ContestUtils {
         String checkerType = ((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0)).
                 getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
                 getAttribute("type");
+        String interactorName = null;
+        if (((Element) document.getElementsByTagName("assets").item(0)).
+                getElementsByTagName("interactor").getLength() != 0) {
+            interactorName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
+                    item(0)).getElementsByTagName("interactor").item(0)).getElementsByTagName("source").
+                    item(0)).getAttribute("path")).getFileName().toString();
+            interactorName = removeExtension(interactorName);
+        }
+
         Path checkerTo = Paths.get(problemDirectory.getParent().toString(), checkerFrom.getFileName().toString());
         String fileWithoutExtension = removeExtension(checkerTo.getFileName().toString());
 
@@ -326,7 +335,12 @@ public class ContestUtils {
             Path outputFile = Paths.get(testsDir.toString(), String.format(testNameFormat + ".a", i + 1));
 
             createFile(outputFile);
-            executeScript(removeExtension(to.getFileName().toString()), problemDirectory.getParent(), inputFile, outputFile);
+
+            if (interactorName == null) {
+                executeScript(removeExtension(to.getFileName().toString()), problemDirectory.getParent(), inputFile, outputFile);
+            } else {
+                executeScript(String.format("java -Xmx512M -Xss64M -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US -jar files/CrossRun.jar \"%s %s %s\" \"%s\"", interactorName, inputFile.getFileName(), outputFile.getFileName(), to.getFileName().toString()), problemDirectory.getParent(), null, null);
+            }
         }
     }
 
