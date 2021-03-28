@@ -339,7 +339,7 @@ public class ContestUtils {
             if (interactorName == null) {
                 executeScript(removeExtension(to.getFileName().toString()), problemDirectory.getParent(), inputFile, outputFile);
             } else {
-                executeScript(String.format("java -Xmx512M -Xss64M -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US -jar files/CrossRun.jar \"%s %s %s\" \"%s\"", interactorName, inputFile.getFileName(), outputFile.getFileName(), to.getFileName().toString()), problemDirectory.getParent(), null, null);
+                executeScript(String.format("java -Xmx512M -Xss64M -DONLINE_JUDGE=true -Duser.language=en -Duser.region=US -Duser.variant=US -jar %s/files/CrossRun.jar \"%s tests/%s tests/%s\" \"%s\"", problemDirectory.getFileName().toString(), interactorName, inputFile.getFileName(), outputFile.getFileName(), removeExtension(to.getFileName().toString())), problemDirectory.getParent(), null, null);
             }
         }
     }
