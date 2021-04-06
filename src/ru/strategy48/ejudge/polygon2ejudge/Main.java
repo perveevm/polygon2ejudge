@@ -23,8 +23,7 @@ public class Main {
     private static Path credentialsFile;
 
     public static void main(String[] args) {
-        Option credentialsFileOption = new Option("c", "credentials",
-                true, "Credentials file path");
+        Option credentialsFileOption = new Option("c", "credentials", true, "Credentials file path");
         Option contestIdOption = new Option("i", "contest_id", true, "Polygon contest ID");
         Option defaultConfigFileOption = new Option("s", "config", true, "Default serve.cfg template");
         Option contestsDirOption = new Option("d", "contest_dir", true, "Contest directory");
@@ -51,7 +50,7 @@ public class Main {
         try {
             commandLine = parser.parse(posixOptions, args);
         } catch (ParseException e) {
-            System.out.println("Error parsing arguments!");
+            ConsoleLogger.logError(e, "Error happened while parsing arguments!");
             e.printStackTrace();
             return;
         }
@@ -65,16 +64,13 @@ public class Main {
             ContestUtils.prepareContest(session, contestId, contestDirectory,
                     "Generic", defaultConfigFile);
         } catch (IOException e) {
-            System.out.println("Error happened while reading credentials file!");
-            System.out.println(e.getMessage());
+            ConsoleLogger.logError(e, "Error happened while reading credentials file!");
             e.printStackTrace();
         } catch (PolygonException e) {
-            System.out.println("Error happened while working with Polygon!");
-            System.out.println(e.getMessage());
+            ConsoleLogger.logError(e, "Error happened while working with Polygon!");
             e.printStackTrace();
         } catch (ContestException e) {
-            System.out.println("Error happened while preparing contest files!");
-            System.out.println(e.getMessage());
+            ConsoleLogger.logError(e, "Error happened while preparing contest files and directories!");
             e.printStackTrace();
         }
     }

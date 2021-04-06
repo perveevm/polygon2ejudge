@@ -1,5 +1,6 @@
 package ru.strategy48.ejudge.polygon2ejudge.contest;
 
+import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.FileSystemException;
 
@@ -13,7 +14,7 @@ import java.nio.file.Path;
  */
 public class FileUtils {
     static void copyFile(final Path from, final Path to) throws ContestException {
-        System.out.printf("Copying %s to %s\n", from.toString(), to.toString());
+        ConsoleLogger.logInfo("Copying %s to %s", from.toString(), to.toString());
 
         try {
             Files.copy(from, to);
@@ -23,7 +24,7 @@ public class FileUtils {
     }
 
     static void moveFile(final Path from, final Path to) throws ContestException {
-        System.out.printf("Moving %s to %s\n", from.toString(), to.toString());
+        ConsoleLogger.logInfo("Moving %s to %s", from.toString(), to.toString());
 
         try {
             Files.move(from, to);
@@ -33,7 +34,7 @@ public class FileUtils {
     }
 
     static void deleteFile(final Path path) throws ContestException {
-        System.out.printf("Deleting %s\n", path.toString());
+        ConsoleLogger.logInfo("Deleting %s", path.toString());
 
         try {
             Files.deleteIfExists(path);
@@ -43,7 +44,7 @@ public class FileUtils {
     }
 
     static Path createFile(final Path path) throws ContestException {
-        System.out.printf("Creating file %s\n", path.toString());
+        ConsoleLogger.logInfo("Creating file %s", path.toString());
 
         try {
             return Files.createFile(path);
@@ -53,7 +54,7 @@ public class FileUtils {
     }
 
     static void createDirectory(final Path path) throws ContestException {
-        System.out.printf("Creating %s directory\n", path.toString());
+        ConsoleLogger.logInfo("Creating directory %s", path.toString());
 
         try {
             Files.createDirectory(path);
@@ -63,7 +64,7 @@ public class FileUtils {
     }
 
     static String readFile(final Path path) throws ContestException {
-        System.out.printf("Reading file %s\n", path.toString());
+        ConsoleLogger.logInfo("Reading file %s", path.toString());
 
         StringBuilder res = new StringBuilder();
 
@@ -81,7 +82,7 @@ public class FileUtils {
     }
 
     static void writeFile(final Path path, final String data) throws ContestException {
-        System.out.printf("Writing file %s\n", path.toString());
+        ConsoleLogger.logInfo("Writing file %s", path.toString());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toFile()))) {
             writer.write(data);

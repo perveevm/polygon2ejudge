@@ -6,6 +6,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
+import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.*;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
@@ -68,7 +69,7 @@ public class ContestUtils {
             createDirectory(configDirectory);
         }
 
-        System.out.println("=== PREPARING SERVE.CFG ===");
+        ConsoleLogger.logInfo("=== PREPARING SERVE.CFG ===");
         Path configPath = Paths.get(configDirectory.toString(), "serve.cfg");
         if (Files.exists(configPath)) {
             deleteFile(Paths.get(configDirectory.toString(), "serve.cfg.old"));
@@ -84,7 +85,7 @@ public class ContestUtils {
         }
 
         writeFile(configPath, serveCfg.toString());
-        System.out.println("Done!");
+        ConsoleLogger.logInfo("Everything is done!");
     }
 
     /**
@@ -102,7 +103,7 @@ public class ContestUtils {
     public static void prepareProblem(final PolygonSession session, final int problemId, final Path problemDirectory,
                                       final String genericProblemName, final int ejudgeProblemId, final String shortName)
             throws PolygonException, ContestException {
-        System.out.printf("=== PREPARING PROBLEM %s ===%n", shortName);
+        ConsoleLogger.logInfo("=== PREPARING PROBLEM %s ===%n", shortName);
 
         int packageId = prepareArchive(session, problemId, problemDirectory);
 
@@ -120,24 +121,24 @@ public class ContestUtils {
         prepareConfigFile(downloadedProblemDirectory, groups, tests, genericProblemName, ejudgeProblemId, shortName);
 
         cleanUp(downloadedProblemDirectory);
-        System.out.println("Done!\n");
+        ConsoleLogger.logInfo("Problem %s is done!", shortName);
     }
 
     private static int prepareArchive(final PolygonSession session, final int problemId, final Path problemDirectory)
             throws PolygonException, ContestException {
-        System.out.println("=== PREPARING ARCHIVE ===");
-        System.out.printf("Getting packages list for problem %d\n", problemId);
+        ConsoleLogger.logInfo("=== PREPARING ARCHIVE ===");
 
+        ConsoleLogger.logInfo("Getting packages list for problem %d\n", problemId);
         List<Package> packages = session.getProblemPackages(problemId);
         packages.sort(Comparator.comparingInt(Package::getId).reversed());
 
         int packageId = packages.get(0).getId();
 
-        System.out.printf("Downloading package %d for problem %d to %s\n", packageId, problemId,
+        ConsoleLogger.logInfo("Downloading package %d for problem %d to %s\n", packageId, problemId,
                 problemDirectory.toString());
         Path archivePath = session.saveProblemPackageToFile(problemId, packageId, problemDirectory);
 
-        System.out.println("Extracting archive");
+        ConsoleLogger.logInfo("Extracting archive");
         try {
             ZipFile zipFile = new ZipFile(archivePath.toFile());
             zipFile.extractAll(Paths.get(problemDirectory.toString(), String.valueOf(packageId)).toString());
@@ -145,14 +146,14 @@ public class ContestUtils {
             throw new FileSystemException(archivePath, e);
         }
 
-        System.out.println("Deleting archive file");
+        ConsoleLogger.logInfo("Deleting archive file");
         deleteFile(archivePath);
 
         return packageId;
     }
 
     private static void prepareExecutables(final Path problemDirectory) throws ContestException {
-        System.out.println("=== PREPARING EXECUTABLES ===");
+        ConsoleLogger.logInfo("=== PREPARING EXECUTABLES ===");
         Document document = getProblemXML(problemDirectory);
 
         NodeList resources = ((Element) ((Element) document.getElementsByTagName("files").item(0))
@@ -185,7 +186,7 @@ public class ContestUtils {
     }
 
     private static List<Test> prepareTests(final Path problemDirectory) throws ContestException {
-        System.out.println("=== PREPARING TESTS ===");
+        ConsoleLogger.logInfo("=== PREPARING TESTS ===");
 
         List<Test> allTests = new ArrayList<>();
         createDirectory(Paths.get(problemDirectory.getParent().toString(), "tests"));
@@ -199,14 +200,7 @@ public class ContestUtils {
         String inputFormat = (testset.getElementsByTagName("input-path-pattern").item(0)).getTextContent();
         int testCount = tests.getLength();
 
-        String testNameFormat = "%02d";
-        if (testCount >= 100) {
-            testNameFormat = "%03d";
-        }
-        if (testCount >= 1000) {
-            testNameFormat = "%04d";
-        }
-
+        String testNameFormat = getIntegerFormat(testCount);
         for (int i = 0; i < tests.getLength(); i++) {
             Element test = (Element) tests.item(i);
 
@@ -223,7 +217,7 @@ public class ContestUtils {
             allTests.add(new Test(i + 1, group, points, isSample));
 
             if (!isGenerated) {
-                System.out.println("Copying manual test #" + (i + 1));
+                ConsoleLogger.logInfo("Copying manual test #" + (i + 1));
 
                 Path from = Paths.get(problemDirectory.toString(), String.format(inputFormat, i + 1));
                 Path to = Paths.get(problemDirectory.getParent().toString(), "tests",
@@ -234,7 +228,7 @@ public class ContestUtils {
                 continue;
             }
 
-            System.out.println("Generating test #" + (i + 1));
+            ConsoleLogger.logInfo("Generating test #" + (i + 1));
 
             Path testFile = createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
                     String.format(testNameFormat, i + 1)));
@@ -249,7 +243,7 @@ public class ContestUtils {
             }
         }
 
-        System.out.println("Deleting temporary files");
+        ConsoleLogger.logInfo("Deleting temporary files");
         for (int i = 0; i < tests.getLength(); i++) {
             Element test = (Element) tests.item(i);
             if (test.hasAttribute("from-file")) {
@@ -263,16 +257,10 @@ public class ContestUtils {
     }
 
     private static void prepareAnswers(final Path problemDirectory, final List<Test> tests) throws ContestException {
-        System.out.println("=== PREPARING TESTS ANSWERS ===");
+        ConsoleLogger.logInfo("=== PREPARING TESTS ANSWERS ===");
 
         int testCount = tests.size();
-        String testNameFormat = "%02d";
-        if (testCount >= 100) {
-            testNameFormat = "%03d";
-        }
-        if (testCount >= 1000) {
-            testNameFormat = "%04d";
-        }
+        String testNameFormat = getIntegerFormat(testCount);
 
         Document document = getProblemXML(problemDirectory);
         NodeList solutions = ((Element) ((Element) document.getElementsByTagName("assets").item(0))
@@ -330,7 +318,7 @@ public class ContestUtils {
 
         Path testsDir = Paths.get(problemDirectory.getParent().toString(), "tests");
         for (int i = 0; i < testCount; i++) {
-            System.out.println("Generating answer for test #" + (i + 1));
+            ConsoleLogger.logInfo("Generating answer for test #" + (i + 1));
             Path inputFile = Paths.get(testsDir.toString(), String.format(testNameFormat, i + 1));
             Path outputFile = Paths.get(testsDir.toString(), String.format(testNameFormat + ".a", i + 1));
 
@@ -346,7 +334,7 @@ public class ContestUtils {
 
     private static List<Group> generateGroups(final Path problemDirectory, final List<Test> allTests)
             throws ContestException {
-        System.out.println("=== PARSING GROUPS ===");
+        ConsoleLogger.logInfo("=== PARSING GROUPS ===");
         Document document = getProblemXML(problemDirectory);
 
         Element testset = (Element) ((Element) document.getElementsByTagName("judging").item(0))
@@ -366,7 +354,7 @@ public class ContestUtils {
             List<Test> curTests = allTests.stream().filter((test) -> test.getGroup() == id).collect(Collectors.toList());
             List<Integer> dependencies = null;
 
-            System.out.println("Parsing group #" + id);
+            ConsoleLogger.logInfo("Parsing group #%d", id);
 
             if (group.getElementsByTagName("dependencies").getLength() != 0) {
                 NodeList dependenciesList = ((Element) group.getElementsByTagName("dependencies").item(0))
@@ -399,7 +387,7 @@ public class ContestUtils {
     }
 
     private static void prepareGroups(final Path problemDirectory, final List<Group> groups) throws ContestException {
-        System.out.println("=== GENERATING VALUER.CFG ===");
+        ConsoleLogger.logInfo("=== GENERATING VALUER.CFG ===");
 
         Path valuerPath = Paths.get(problemDirectory.getParent().toString(), "valuer.cfg");
 
@@ -409,7 +397,7 @@ public class ContestUtils {
     }
 
     private static void cleanUp(final Path problemDirectory) throws ContestException {
-        System.out.println("=== CLEANING UP ===");
+        ConsoleLogger.logInfo("=== CLEANING UP ===");
 
         try {
             FileUtils.deleteDirectory(problemDirectory.toFile());
@@ -421,7 +409,7 @@ public class ContestUtils {
     private static void prepareConfigFile(final Path problemDirectory, final List<Group> allGroups,
                                           final List<Test> allTests, final String genericProblemName,
                                           final int ejudgeProblemId, final String shortName) throws ContestException {
-        System.out.println("=== GENERATING PROBLEM.CFG ===");
+        ConsoleLogger.logInfo("=== GENERATING PROBLEM.CFG ===");
 
         StringBuilder res = new StringBuilder();
         Document document = getProblemXML(problemDirectory);
@@ -443,13 +431,7 @@ public class ContestUtils {
 
         checkerName = removeExtension(checkerName);
         String longName = ((Element) names.item(0)).getAttribute("value");
-        String testFormat = "%02d";
-        if (allTests.size() >= 100) {
-            testFormat = "%03d";
-        }
-        if (allTests.size() >= 1000) {
-            testFormat = "%04d";
-        }
+        String testFormat = getIntegerFormat(allTests.size());
         int timeLimit = Integer.parseInt(testset.getElementsByTagName("time-limit").item(0).getTextContent());
         int memoryLimit = Integer.parseInt(testset.getElementsByTagName("memory-limit").item(0).getTextContent());
 
@@ -536,6 +518,10 @@ public class ContestUtils {
         }
     }
 
+    private static String getIntegerFormat(final int cnt) {
+        return "%0" + Math.max(String.valueOf(cnt).length(), 2) + "d";
+    }
+
     private static String removeExtension(final String fileName) {
         return fileName.substring(0, fileName.lastIndexOf('.'));
     }
@@ -543,7 +529,7 @@ public class ContestUtils {
     private static void executeScript(final String cmd, final Path workingDirectory,
                                       final Path inputRedirection, final Path outputRedirection)
             throws ContestException {
-        System.out.println("Executing " + cmd);
+        ConsoleLogger.logInfo("Executing script: \"%s\"", cmd);
 
         ProcessBuilder processBuilder = new ProcessBuilder();
         processBuilder.command(List.of("bash", "-c", cmd));
@@ -571,7 +557,7 @@ public class ContestUtils {
     }
 
     private static void compileCode(final Path sourcePath, final boolean isScript) throws ContestException {
-        System.out.println("Compiling " + sourcePath.getFileName());
+        ConsoleLogger.logInfo("Compiling file %s", sourcePath.getFileName());
 
         String command = String.format("g++ -o %s %s -std=c++17",
                 removeExtension(sourcePath.getFileName().toString()),
