@@ -21,9 +21,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.strategy48.ejudge.polygon2ejudge.contest.FileUtils.*;
@@ -201,6 +199,7 @@ public class ContestUtils {
         int testCount = tests.getLength();
 
         String testNameFormat = getIntegerFormat(testCount);
+        Set<String> executedMultigenScripts = new HashSet<>();
         for (int i = 0; i < tests.getLength(); i++) {
             Element test = (Element) tests.item(i);
 
@@ -232,7 +231,11 @@ public class ContestUtils {
 
             Path testFile = createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
                     String.format(testNameFormat, i + 1)));
-            executeScript(test.getAttribute("cmd"), problemDirectory.getParent(), null, testFile);
+
+            if (!executedMultigenScripts.contains(test.getAttribute("cmd"))) {
+                executeScript(test.getAttribute("cmd"), problemDirectory.getParent(), null, testFile);
+                executedMultigenScripts.add(test.getAttribute("cmd"));
+            }
 
             if (fromFile != null) {
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
