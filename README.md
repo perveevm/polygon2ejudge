@@ -41,5 +41,5 @@ You should use such command to download and prepare contest from Polygon:
 1. Only C++ checkers/generators/validators are supported
 2. ~~No interactive problems support~~ Done!
 3. Only C++ main correct solutions supported
-4. No test validation
+4. ~~No test validation~~ Done!
 5. No flexible parameterss configuration in serve.cfg
