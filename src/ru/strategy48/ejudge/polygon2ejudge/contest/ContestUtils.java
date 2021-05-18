@@ -245,6 +245,19 @@ public class ContestUtils {
                 moveFile(from, to);
             }
         }
+        
+        ConsoleLogger.logInfo("=== VALIDATING TESTS ===");
+        for (int i = 0; i < tests.getLength(); i++) {
+            ConsoleLogger.logInfo("Validating test number %d", i + 1);
+            Path testPath = Paths.get(problemDirectory.getParent().toString(), "tests",
+                    String.format(testNameFormat, i + 1));
+            String validatorFileName = Paths.get(((Element) ((Element) ((Element) ((Element)
+                    document.getElementsByTagName("assets").item(0)).getElementsByTagName("validators").item(0)).
+                    getElementsByTagName("validator").item(0)).getElementsByTagName("source").item(0)).
+                    getAttribute("path")).getFileName().toString();
+            validatorFileName = removeExtension(validatorFileName);
+            executeScript(validatorFileName, problemDirectory.getParent(), testPath, null);
+        }
 
         ConsoleLogger.logInfo("Deleting temporary files");
         for (int i = 0; i < tests.getLength(); i++) {
