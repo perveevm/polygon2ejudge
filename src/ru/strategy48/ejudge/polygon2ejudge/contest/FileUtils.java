@@ -23,6 +23,24 @@ public class FileUtils {
         }
     }
 
+    static void copyFileCorrectingLineBreaks(final Path from, final Path to) throws ContestException {
+        ConsoleLogger.logInfo("Copying %s to %s correcting line breaks", from.toString(), to.toString());
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(from.toFile()))) {
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(to.toFile()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    writer.write(line);
+                    writer.write(System.lineSeparator());
+                }
+            } catch (IOException e) {
+                throw new FileSystemException(from, to, e);
+            }
+        } catch (IOException e) {
+            throw new FileSystemException(from, to, e);
+        }
+    }
+
     static void moveFile(final Path from, final Path to) throws ContestException {
         ConsoleLogger.logInfo("Moving %s to %s", from.toString(), to.toString());
 

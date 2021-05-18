@@ -222,7 +222,7 @@ public class ContestUtils {
                 Path to = Paths.get(problemDirectory.getParent().toString(), "tests",
                         String.format(testNameFormat, i + 1));
 
-                copyFile(from, to);
+                copyFileCorrectingLineBreaks(from, to);
 
                 continue;
             }
