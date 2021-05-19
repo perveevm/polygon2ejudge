@@ -76,7 +76,7 @@ public class XMLUtils {
             }
             int group = -1;
             if (((Element) testsNode.item(i)).hasAttribute("group")) {
-                points = Integer.parseInt(((Element) testsNode.item(i)).getAttribute("group"));
+                group = Integer.parseInt(((Element) testsNode.item(i)).getAttribute("group"));
             }
             boolean sample = false;
             if (((Element) testsNode.item(i)).hasAttribute("sample")) {
