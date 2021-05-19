@@ -92,9 +92,9 @@ public class XMLUtils {
         }
 
         NodeList resourcesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
-                getElementsByTagName("resources")).getElementsByTagName("file");
+                getElementsByTagName("resources").item(0)).getElementsByTagName("file");
         NodeList executablesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
-                getElementsByTagName("executables")).getElementsByTagName("executable");
+                getElementsByTagName("executables").item(0)).getElementsByTagName("executable");
 
         List<ProblemFile> resources = new ArrayList<>(resourcesNode.getLength());
         List<ProblemFile> executables = new ArrayList<>(executablesNode.getLength());
