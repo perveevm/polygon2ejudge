@@ -59,7 +59,7 @@ public class ContestUtils {
             createDirectory(problemPath);
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
-                    String.valueOf((char) ('A' + ejudgeProblemId - 1)), getProblemConfig(problemPath));
+                    String.valueOf((char) ('A' + ejudgeProblemId - 1)));
         }
 
         Path configDirectory = Paths.get(contestDirectory.toString(), "conf");
@@ -100,13 +100,15 @@ public class ContestUtils {
      */
     public static void prepareProblem(final PolygonSession session, final int problemId, final Path problemDirectory,
                                       final String genericProblemName, final int ejudgeProblemId,
-                                      final String shortName, final ProblemConfig config)
+                                      final String shortName)
             throws PolygonException, ContestException {
         ConsoleLogger.logInfo("=== PREPARING PROBLEM %s ===%n", shortName);
 
         int packageId = prepareArchive(session, problemId, problemDirectory);
 
         Path downloadedProblemDirectory = Paths.get(problemDirectory.toString(), String.valueOf(packageId));
+
+        ProblemConfig config = getProblemConfig(problemDirectory);
         prepareExecutables(downloadedProblemDirectory, config);
 
         prepareTests(downloadedProblemDirectory, config);
