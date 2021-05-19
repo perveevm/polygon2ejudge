@@ -3,12 +3,12 @@ package ru.strategy48.ejudge.polygon2ejudge.contest;
 import net.lingala.zip4j.ZipFile;
 import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.*;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
+import ru.strategy48.ejudge.polygon2ejudge.contest.objects.Test;
+import ru.strategy48.ejudge.polygon2ejudge.contest.xml.*;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.objects.Package;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.exceptions.PolygonException;
 import ru.strategy48.ejudge.polygon2ejudge.polygon.PolygonSession;
@@ -59,7 +59,7 @@ public class ContestUtils {
             createDirectory(problemPath);
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
-                    String.valueOf((char) ('A' + ejudgeProblemId - 1)));
+                    String.valueOf((char) ('A' + ejudgeProblemId - 1)), getProblemConfig(problemPath));
         }
 
         Path configDirectory = Paths.get(contestDirectory.toString(), "conf");
@@ -99,24 +99,24 @@ public class ContestUtils {
      * @throws ContestException if error happened while preparing problem
      */
     public static void prepareProblem(final PolygonSession session, final int problemId, final Path problemDirectory,
-                                      final String genericProblemName, final int ejudgeProblemId, final String shortName)
+                                      final String genericProblemName, final int ejudgeProblemId,
+                                      final String shortName, final ProblemConfig config)
             throws PolygonException, ContestException {
         ConsoleLogger.logInfo("=== PREPARING PROBLEM %s ===%n", shortName);
 
         int packageId = prepareArchive(session, problemId, problemDirectory);
 
         Path downloadedProblemDirectory = Paths.get(problemDirectory.toString(), String.valueOf(packageId));
-        prepareExecutables(downloadedProblemDirectory);
+        prepareExecutables(downloadedProblemDirectory, config);
 
-        List<Test> tests = prepareTests(downloadedProblemDirectory);
-        prepareAnswers(downloadedProblemDirectory, tests);
+        prepareTests(downloadedProblemDirectory, config);
+        prepareAnswers(downloadedProblemDirectory, config);
 
-        List<Group> groups = generateGroups(downloadedProblemDirectory, tests);
-        if (groups != null) {
-            prepareGroups(downloadedProblemDirectory, groups);
+        if (config.getGroups() != null) {
+            prepareGroups(downloadedProblemDirectory, config);
         }
 
-        prepareConfigFile(downloadedProblemDirectory, groups, tests, genericProblemName, ejudgeProblemId, shortName);
+        prepareConfigFile(downloadedProblemDirectory, genericProblemName, ejudgeProblemId, shortName, config);
 
         cleanUp(downloadedProblemDirectory);
         ConsoleLogger.logInfo("Problem %s is done!", shortName);
@@ -150,78 +150,45 @@ public class ContestUtils {
         return packageId;
     }
 
-    private static void prepareExecutables(final Path problemDirectory) throws ContestException {
+    private static void prepareExecutables(final Path problemDirectory, final ProblemConfig config)
+            throws ContestException {
         ConsoleLogger.logInfo("=== PREPARING EXECUTABLES ===");
-        Document document = getProblemXML(problemDirectory);
 
-        NodeList resources = ((Element) ((Element) document.getElementsByTagName("files").item(0))
-                .getElementsByTagName("resources").item(0)).getElementsByTagName("file");
-        NodeList executables = ((Element) ((Element) document.getElementsByTagName("files").item(0))
-                .getElementsByTagName("executables").item(0)).getElementsByTagName("executable");
-
-        for (int i = 0; i < resources.getLength(); i++) {
-            Element resource = (Element) resources.item(i);
-            String curFile = resource.getAttribute("path");
-            Path fromPath = Paths.get(problemDirectory.toString(), curFile);
+        for (ProblemFile resource : config.getResources()) {
+            Path fromPath = Paths.get(problemDirectory.toString(), resource.getPath().toString());
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
-
             copyFile(fromPath, toPath);
         }
 
-        for (int i = 0; i < executables.getLength(); i++) {
-            Element executableSource = (Element) ((Element) executables.item(i))
-                    .getElementsByTagName("source").item(0);
-            String curFile = executableSource.getAttribute("path");
-            String curType = executableSource.getAttribute("type");
-            Path fromPath = Paths.get(problemDirectory.toString(), curFile);
+        for (ProblemFile executable : config.getExecutables()) {
+            Path fromPath = Paths.get(problemDirectory.toString(), executable.getPath().toString());
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
-
             copyFile(fromPath, toPath);
-            if (curType.contains("cpp")) {
+
+            if (executable.getType().contains("cpp")) {
                 compileCode(toPath, true);
             }
         }
     }
 
-    private static List<Test> prepareTests(final Path problemDirectory) throws ContestException {
+    private static void prepareTests(final Path problemDirectory, final ProblemConfig config)
+            throws ContestException {
         ConsoleLogger.logInfo("=== PREPARING TESTS ===");
 
-        List<Test> allTests = new ArrayList<>();
         createDirectory(Paths.get(problemDirectory.getParent().toString(), "tests"));
 
-        Document document = getProblemXML(problemDirectory);
-
-        Element testset = (Element) ((Element) document.getElementsByTagName("judging").item(0))
-                .getElementsByTagName("testset").item(0);
-        NodeList tests = ((Element) testset.getElementsByTagName("tests").item(0)).getElementsByTagName("test");
-
-        String inputFormat = (testset.getElementsByTagName("input-path-pattern").item(0)).getTextContent();
-        int testCount = tests.getLength();
+        String inputFormat = config.getInputFilePattern();
+        int testCount = config.getTests().size();
 
         String testNameFormat = getIntegerFormat(testCount);
         Set<String> executedMultigenScripts = new HashSet<>();
-        for (int i = 0; i < tests.getLength(); i++) {
-            Element test = (Element) tests.item(i);
-
-            int group = test.hasAttribute("group") ? Integer.parseInt(test.getAttribute("group")) : -1;
-            int points = test.hasAttribute("points") ? (int) Double.parseDouble(test.getAttribute("points")) : -1;
-            boolean isSample = test.hasAttribute("sample") && Boolean.parseBoolean(test.getAttribute("sample"));
-            boolean isGenerated = test.getAttribute("method").equals("generated");
-
-            String fromFile = null;
-            if (test.hasAttribute("from-file")) {
-                fromFile = test.getAttribute("from-file");
-            }
-
-            allTests.add(new Test(i + 1, group, points, isSample));
-
-            if (!isGenerated) {
+        for (int i = 0; i < config.getTests().size(); i++) {
+            if (config.getTests().get(i).getMethod().equals(GenerationMethod.MANUAL)) {
                 ConsoleLogger.logInfo("Copying manual test #" + (i + 1));
 
                 Path from = Paths.get(problemDirectory.toString(), String.format(inputFormat, i + 1));
                 Path to = Paths.get(problemDirectory.getParent().toString(), "tests",
                         String.format(testNameFormat, i + 1));
-
                 copyFileCorrectingLineBreaks(from, to);
 
                 continue;
@@ -232,11 +199,12 @@ public class ContestUtils {
             Path testFile = createFile(Paths.get(problemDirectory.getParent().toString(), "tests",
                     String.format(testNameFormat, i + 1)));
 
-            if (!executedMultigenScripts.contains(test.getAttribute("cmd"))) {
-                executeScript(test.getAttribute("cmd"), problemDirectory.getParent(), null, testFile);
-                executedMultigenScripts.add(test.getAttribute("cmd"));
+            if (!executedMultigenScripts.contains(config.getTests().get(i).getCmd())) {
+                executeScript(config.getTests().get(i).getCmd(), problemDirectory.getParent(), null, testFile);
+                executedMultigenScripts.add(config.getTests().get(i).getCmd());
             }
 
+            String fromFile = config.getTests().get(i).getFromFile();
             if (fromFile != null) {
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
                 Path to = testFile.toAbsolutePath();
@@ -247,53 +215,39 @@ public class ContestUtils {
         }
         
         ConsoleLogger.logInfo("=== VALIDATING TESTS ===");
-        for (int i = 0; i < tests.getLength(); i++) {
+        for (int i = 0; i < testCount; i++) {
             ConsoleLogger.logInfo("Validating test number %d", i + 1);
             Path testPath = Paths.get(problemDirectory.getParent().toString(), "tests",
                     String.format(testNameFormat, i + 1));
-            String validatorFileName = Paths.get(((Element) ((Element) ((Element) ((Element)
-                    document.getElementsByTagName("assets").item(0)).getElementsByTagName("validators").item(0)).
-                    getElementsByTagName("validator").item(0)).getElementsByTagName("source").item(0)).
-                    getAttribute("path")).getFileName().toString();
-            validatorFileName = removeExtension(validatorFileName);
-            executeScript(validatorFileName, problemDirectory.getParent(), testPath, null);
-        }
 
-        ConsoleLogger.logInfo("Deleting temporary files");
-        for (int i = 0; i < tests.getLength(); i++) {
-            Element test = (Element) tests.item(i);
-            if (test.hasAttribute("from-file")) {
-                String fromFile = test.getAttribute("from-file");
-
-                deleteFile(Paths.get(problemDirectory.getParent().toString(), fromFile));
+            for (ProblemFile validator : config.getValidators()) {
+                String validatorFileName = removeExtension(validator.getPath().getFileName().toString());
+                executeScript(validatorFileName, problemDirectory.getParent(), testPath, null);
             }
         }
 
-        return allTests;
+        ConsoleLogger.logInfo("Deleting temporary files");
+        for (int i = 0; i < testCount; i++) {
+            String fromFile = config.getTests().get(i).getFromFile();
+            if (fromFile != null) {
+                deleteFile(Paths.get(problemDirectory.getParent().toString(), fromFile));
+            }
+        }
     }
 
-    private static void prepareAnswers(final Path problemDirectory, final List<Test> tests) throws ContestException {
+    private static void prepareAnswers(final Path problemDirectory, final ProblemConfig config)
+            throws ContestException {
         ConsoleLogger.logInfo("=== PREPARING TESTS ANSWERS ===");
 
-        int testCount = tests.size();
+        int testCount = config.getTests().size();
         String testNameFormat = getIntegerFormat(testCount);
 
-        Document document = getProblemXML(problemDirectory);
-        NodeList solutions = ((Element) ((Element) document.getElementsByTagName("assets").item(0))
-                .getElementsByTagName("solutions").item(0)).getElementsByTagName("solution");
-        Path checkerFrom = Paths.get(problemDirectory.toString(), ((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0)).
-                getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
-                getAttribute("path"));
-        String checkerType = ((Element) ((Element) ((Element) document.getElementsByTagName("assets").item(0)).
-                getElementsByTagName("checker").item(0)).getElementsByTagName("source").item(0)).
-                getAttribute("type");
+        Path checkerFrom = config.getChecker().getPath();
+        String checkerType = config.getChecker().getType();
+
         String interactorName = null;
-        if (((Element) document.getElementsByTagName("assets").item(0)).
-                getElementsByTagName("interactor").getLength() != 0) {
-            interactorName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
-                    item(0)).getElementsByTagName("interactor").item(0)).getElementsByTagName("source").
-                    item(0)).getAttribute("path")).getFileName().toString();
-            interactorName = removeExtension(interactorName);
+        if (config.getInteractor() != null) {
+            interactorName = removeExtension(config.getInteractor().getPath().getFileName().toString());
         }
 
         Path checkerTo = Paths.get(problemDirectory.getParent().toString(), checkerFrom.getFileName().toString());
@@ -311,13 +265,11 @@ public class ContestUtils {
 
         String solutionDir = null;
         String solutionType = "";
-        for (int i = 0; i < solutions.getLength(); i++) {
-            Element solution = (Element) solutions.item(i);
-            if (solution.getAttribute("tag").equals("main")) {
-                solutionDir = ((Element) solution.getElementsByTagName("source").item(0))
-                        .getAttribute("path");
-                solutionType = ((Element) solution.getElementsByTagName("source").item(0))
-                        .getAttribute("type");
+        for (int i = 0; i < config.getSolutions().size(); i++) {
+            Solution solution = config.getSolutions().get(i);
+            if (solution.getTag().equals("main")) {
+                solutionDir = solution.getFile().getPath().toString();
+                solutionType = solution.getFile().getType();
                 break;
             }
         }
@@ -348,67 +300,13 @@ public class ContestUtils {
         }
     }
 
-    private static List<Group> generateGroups(final Path problemDirectory, final List<Test> allTests)
-            throws ContestException {
-        ConsoleLogger.logInfo("=== PARSING GROUPS ===");
-        Document document = getProblemXML(problemDirectory);
-
-        Element testset = (Element) ((Element) document.getElementsByTagName("judging").item(0))
-                .getElementsByTagName("testset").item(0);
-
-        if (testset.getElementsByTagName("groups").getLength() == 0) {
-            return null;
-        }
-
-        List<Group> allGroups = new ArrayList<>();
-        NodeList groups = ((Element) testset.getElementsByTagName("groups").item(0)).getElementsByTagName("group");
-
-        for (int i = 0; i < groups.getLength(); i++) {
-            Element group = (Element) groups.item(i);
-
-            int id = Integer.parseInt(group.getAttribute("name"));
-            List<Test> curTests = allTests.stream().filter((test) -> test.getGroup() == id).collect(Collectors.toList());
-            List<Integer> dependencies = null;
-
-            ConsoleLogger.logInfo("Parsing group #%d", id);
-
-            if (group.getElementsByTagName("dependencies").getLength() != 0) {
-                NodeList dependenciesList = ((Element) group.getElementsByTagName("dependencies").item(0))
-                        .getElementsByTagName("dependency");
-                dependencies = new ArrayList<>();
-
-                for (int j = 0; j < dependenciesList.getLength(); j++) {
-                    Element dependency = (Element) dependenciesList.item(j);
-                    dependencies.add(Integer.parseInt(dependency.getAttribute("group")));
-                }
-            }
-
-            FeedbackPolicy feedbackPolicy = switch (group.getAttribute("feedback-policy")) {
-                case "complete" -> FeedbackPolicy.COMPLETE;
-                case "icpc" -> FeedbackPolicy.ICPC;
-                case "points" -> FeedbackPolicy.POINTS;
-                default -> FeedbackPolicy.NONE;
-            };
-            PointsPolicy pointsPolicy;
-            if (group.getAttribute("points-policy").equals("each-test")) {
-                pointsPolicy = PointsPolicy.EACH_TEST;
-            } else {
-                pointsPolicy = PointsPolicy.COMPLETE_GROUP;
-            }
-
-            allGroups.add(new Group(id, curTests, dependencies, feedbackPolicy, pointsPolicy));
-        }
-
-        return allGroups;
-    }
-
-    private static void prepareGroups(final Path problemDirectory, final List<Group> groups) throws ContestException {
+    private static void prepareGroups(final Path problemDirectory, final ProblemConfig config) throws ContestException {
         ConsoleLogger.logInfo("=== GENERATING VALUER.CFG ===");
 
         Path valuerPath = Paths.get(problemDirectory.getParent().toString(), "valuer.cfg");
 
         String res = "global {\n\tstat_to_users;\n}\n" +
-                groups.stream().map(Group::toString).collect(Collectors.joining("\n"));
+                config.getGroups().stream().map(Group::toString).collect(Collectors.joining("\n"));
         writeFile(valuerPath, res);
     }
 
@@ -422,34 +320,24 @@ public class ContestUtils {
         }
     }
 
-    private static void prepareConfigFile(final Path problemDirectory, final List<Group> allGroups,
-                                          final List<Test> allTests, final String genericProblemName,
-                                          final int ejudgeProblemId, final String shortName) throws ContestException {
+    private static void prepareConfigFile(final Path problemDirectory, final String genericProblemName,
+                                          final int ejudgeProblemId, final String shortName,
+                                          final ProblemConfig config)
+            throws ContestException {
         ConsoleLogger.logInfo("=== GENERATING PROBLEM.CFG ===");
 
         StringBuilder res = new StringBuilder();
-        Document document = getProblemXML(problemDirectory);
 
-        NodeList names = ((Element) document.getElementsByTagName("names").item(0)).getElementsByTagName("name");
-        Element testset = (Element) ((Element) document.getElementsByTagName("judging").item(0))
-                .getElementsByTagName("testset").item(0);
-        String checkerName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
-                item(0)).getElementsByTagName("checker").item(0)).getElementsByTagName("source").
-                item(0)).getAttribute("path")).getFileName().toString();
+        String checkerName = removeExtension(config.getChecker().getPath().getFileName().toString());
         String interactorName = null;
-        if (((Element) document.getElementsByTagName("assets").item(0)).
-                getElementsByTagName("interactor").getLength() != 0) {
-            interactorName = Paths.get(((Element) ((Element) ((Element) document.getElementsByTagName("assets").
-                    item(0)).getElementsByTagName("interactor").item(0)).getElementsByTagName("source").
-                    item(0)).getAttribute("path")).getFileName().toString();
-            interactorName = removeExtension(interactorName);
+        if (config.getInteractor() != null) {
+            interactorName = removeExtension(config.getInteractor().getPath().getFileName().toString());
         }
 
-        checkerName = removeExtension(checkerName);
-        String longName = ((Element) names.item(0)).getAttribute("value");
-        String testFormat = getIntegerFormat(allTests.size());
-        int timeLimit = Integer.parseInt(testset.getElementsByTagName("time-limit").item(0).getTextContent());
-        int memoryLimit = Integer.parseInt(testset.getElementsByTagName("memory-limit").item(0).getTextContent());
+        String longName = config.getNames().get("russian");
+        String testFormat = getIntegerFormat(config.getTests().size());
+        int timeLimit = config.getTimeLimit();
+        int memoryLimit = config.getMemoryLimit();
 
         res.append("[problem]\n");
         res.append(String.format("id = %d\n", ejudgeProblemId));
@@ -493,16 +381,16 @@ public class ContestUtils {
             res.append(String.format("interactor_cmd = \"%s\"\n", interactorName));
         }
 
-        if (allTests.get(0).getPoints() != -1) {
-            res.append(String.format("test_score_list = \"%s\"\n", allTests.stream().map(Test::getPoints).
+        if (config.getTests().get(0).getPoints() != -1) {
+            res.append(String.format("test_score_list = \"%s\"\n", config.getTests().stream().map(Test::getPoints).
                     map(Object::toString).collect(Collectors.joining(" "))));
         }
 
-        if (allGroups == null) {
+        if (config.getGroups() == null) {
             res.append("valuer_cmd = \"\"\n");
         } else {
             List<String> visibility = new ArrayList<>();
-            for (Group group : allGroups) {
+            for (Group group : config.getGroups()) {
                 String curVisibility = switch (group.getFeedbackPolicy()) {
                     case ICPC, COMPLETE -> "brief";
                     case POINTS, NONE -> "hidden";
@@ -512,7 +400,7 @@ public class ContestUtils {
                 }
             }
             res.append(String.format("open_tests = \"%s\"\n", String.join(",", visibility)));
-            res.append(String.format("final_open_tests = \"1-%d:full\"\n", allTests.size()));
+            res.append(String.format("final_open_tests = \"1-%d:full\"\n", config.getTests().size()));
         }
 
         res.append("autoassign_variants = 0\n");
@@ -520,6 +408,10 @@ public class ContestUtils {
 
         Path configPath = Paths.get(problemDirectory.getParent().toString(), "problem.cfg");
         writeFile(configPath, res.toString());
+    }
+
+    private static ProblemConfig getProblemConfig(final Path problemDirectory) throws ContestException {
+        return XMLUtils.parseProblemXML(Paths.get(problemDirectory.toString(), "problem.xml"));
     }
 
     private static Document getProblemXML(final Path problemDirectory) throws ContestException {
