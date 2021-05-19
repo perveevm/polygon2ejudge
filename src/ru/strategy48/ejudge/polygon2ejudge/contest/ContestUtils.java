@@ -213,7 +213,7 @@ public class ContestUtils {
                 moveFile(from, to);
             }
         }
-        
+
         ConsoleLogger.logInfo("=== VALIDATING TESTS ===");
         for (int i = 0; i < testCount; i++) {
             ConsoleLogger.logInfo("Validating test number %d", i + 1);
