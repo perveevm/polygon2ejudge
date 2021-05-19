@@ -244,7 +244,7 @@ public class ContestUtils {
         int testCount = config.getTests().size();
         String testNameFormat = getIntegerFormat(testCount);
 
-        Path checkerFrom = config.getChecker().getPath();
+        Path checkerFrom = Paths.get(problemDirectory.toString(), config.getChecker().getPath().toString());
         String checkerType = config.getChecker().getType();
 
         String interactorName = null;
