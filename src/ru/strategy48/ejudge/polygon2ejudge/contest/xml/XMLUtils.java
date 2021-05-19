@@ -4,7 +4,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
-import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ConfigurationException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Phaser;
 import java.util.stream.Collectors;
 
 /**
@@ -115,31 +113,36 @@ public class XMLUtils {
 
         Element assetsNode = (Element) document.getElementsByTagName("assets").item(0);
         Element checkerNode = (Element) assetsNode.getElementsByTagName("checker").item(0);
-        NodeList validatorsNode = ((Element) assetsNode.getElementsByTagName("validators").item(0)).
-                getElementsByTagName("validator");
         NodeList solutionsNode = ((Element) assetsNode.getElementsByTagName("solutions").item(0))
                 .getElementsByTagName("solution");
-        Element interactorNode = (Element) assetsNode.getElementsByTagName("interactor").item(0);
 
         Element checkerSource = (Element) checkerNode.getElementsByTagName("source").item(0);
         Path checkerPath = Path.of(checkerSource.getAttribute("path"));
         String checkerType = checkerSource.getAttribute("type");
         ProblemFile checker = new ProblemFile(checkerPath, checkerType);
 
-        List<ProblemFile> validators = new ArrayList<>(validatorsNode.getLength());
-        List<Solution> solutions = new ArrayList<>(solutionsNode.getLength());
+        List<ProblemFile> validators = null;
+        if (assetsNode.getElementsByTagName("validators").getLength() != 0) {
+            NodeList validatorsNode = ((Element) assetsNode.getElementsByTagName("validators").item(0)).
+                    getElementsByTagName("validator");
 
-        for (int i = 0; i < validatorsNode.getLength(); i++) {
-            validators.add(parseProblemFileFromNode((Element) validatorsNode.item(i)));
+            validators = new ArrayList<>(validatorsNode.getLength());
+            for (int i = 0; i < validatorsNode.getLength(); i++) {
+                validators.add(parseProblemFileFromNode((Element) validatorsNode.item(i)));
+            }
         }
 
+        List<Solution> solutions = new ArrayList<>(solutionsNode.getLength());
         for (int i = 0; i < solutionsNode.getLength(); i++) {
             String tag = ((Element) solutionsNode.item(i)).getAttribute("tag");
             solutions.add(new Solution(tag, parseProblemFileFromNode((Element) solutionsNode.item(i))));
         }
 
-        Element interactorSource = (Element) interactorNode.getElementsByTagName("source").item(0);
-        ProblemFile interactor = parseProblemFileFromNode(interactorSource);
+        ProblemFile interactor = null;
+        if (assetsNode.getElementsByTagName("interactor").getLength() != 0) {
+            Element interactorNode = (Element) assetsNode.getElementsByTagName("interactor").item(0);
+            interactor = parseProblemFileFromNode(interactorNode);
+        }
 
         List<Group> groups = null;
         if (testset.getElementsByTagName("groups").getLength() != 0) {
