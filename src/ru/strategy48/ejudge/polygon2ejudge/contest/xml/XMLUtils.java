@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Phaser;
 import java.util.stream.Collectors;
 
 /**
@@ -100,7 +101,12 @@ public class XMLUtils {
         List<ProblemFile> executables = new ArrayList<>(executablesNode.getLength());
 
         for (int i = 0; i < resourcesNode.getLength(); i++) {
-            resources.add(parseProblemFileFromNode((Element) resourcesNode.item(i)));
+            Path path = Path.of(((Element) resourcesNode.item(i)).getAttribute("path"));
+            String type = null;
+            if (((Element) resourcesNode.item(i)).hasAttribute("type")) {
+                type = ((Element) resourcesNode.item(i)).getAttribute("type");
+            }
+            resources.add(new ProblemFile(path, type));
         }
 
         for (int i = 0; i < executablesNode.getLength(); i++) {
