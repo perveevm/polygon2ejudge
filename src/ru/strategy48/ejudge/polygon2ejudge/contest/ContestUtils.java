@@ -108,7 +108,7 @@ public class ContestUtils {
 
         Path downloadedProblemDirectory = Paths.get(problemDirectory.toString(), String.valueOf(packageId));
 
-        ProblemConfig config = getProblemConfig(problemDirectory);
+        ProblemConfig config = getProblemConfig(downloadedProblemDirectory);
         prepareExecutables(downloadedProblemDirectory, config);
 
         prepareTests(downloadedProblemDirectory, config);
