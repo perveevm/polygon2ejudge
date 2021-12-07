@@ -223,8 +223,12 @@ public class ContestUtils {
                     String.format(testNameFormat, i + 1));
 
             for (ProblemFile validator : config.getValidators()) {
-                String validatorFileName = removeExtension(validator.getPath().getFileName().toString());
-                executeScript(validatorFileName, problemDirectory.getParent(), testPath, null);
+                String validatorScript = removeExtension(validator.getPath().getFileName().toString());
+                int group = config.getTests().get(i).getGroup();
+                if (group != -1) {
+                    validatorScript += " --group " + group;
+                }
+                executeScript(validatorScript, problemDirectory.getParent(), testPath, null);
             }
         }
 
@@ -452,7 +456,7 @@ public class ContestUtils {
             processBuilder.redirectOutput(outputRedirection.toFile());
         }
         processBuilder.environment().put("PATH", processBuilder.environment().get("PATH") + ":"
-                + workingDirectory.toString());
+                + workingDirectory);
 
         try {
             Process process = processBuilder.start();
