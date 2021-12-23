@@ -44,9 +44,9 @@ public class JavaCompiler extends AbstractCompiler implements Compiler {
 
     private void prepareExecutable(final Path sourcePath) throws ContestException {
         String script = "#!/bin/bash" + System.lineSeparator() +
-                String.format("java -Xmx512M -Xss512M -DEJUDGE=true -Duser.language=en -Duser.region=US" +
-                        "-Duser.variant=US -cp %s %s \"$@\"", sourcePath.getParent(), sourcePath.getFileName())
-                + System.lineSeparator();
+                String.format("java -Xmx512M -Xss512M -DEJUDGE=true -Duser.language=en -Duser.region=US " +
+                        "-Duser.variant=US -cp %s %s \"$@\"", sourcePath.getParent(),
+                        FileUtils.removeExtension(sourcePath.getFileName())) + System.lineSeparator();
         FileUtils.writeFile(FileUtils.removeExtension(sourcePath), script);
         FileUtils.makeExecutable(FileUtils.removeExtension(sourcePath));
     }
