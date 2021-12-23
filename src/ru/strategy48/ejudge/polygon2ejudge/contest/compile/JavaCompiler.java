@@ -42,7 +42,7 @@ public class JavaCompiler extends AbstractCompiler implements Compiler {
         return instance;
     }
 
-    protected final void prepareExecutable(final Path sourcePath) throws ContestException {
+    private void prepareExecutable(final Path sourcePath) throws ContestException {
         String script = "#!/bin/bash" + System.lineSeparator() +
                 String.format("java -Xmx512M -Xss512M -DEJUDGE=true -Duser.language=en -Duser.region=US" +
                         "-Duser.variant=US %s \"$@\"", FileUtils.removeExtension(sourcePath)) + System.lineSeparator();
@@ -50,7 +50,7 @@ public class JavaCompiler extends AbstractCompiler implements Compiler {
         FileUtils.makeExecutable(FileUtils.removeExtension(sourcePath));
     }
 
-    private static String findMainClassName(final Path sourcePath) throws ContestException {
+    public String findMainClassName(final Path sourcePath) throws ContestException {
         String source = FileUtils.readFile(sourcePath);
         JavaParser parser = new JavaParser();
         Optional<CompilationUnit> cuOpt = parser.parse(source).getResult();

@@ -25,7 +25,7 @@ dependencies {
     compile 'net.lingala.zip4j:zip4j:2.9.1'
     compile 'org.apache.httpcomponents:httpclient:4.5.13'
     compile 'org.json:json:20201115'
-    implementation 'com.github.javaparser:javaparser-core:3.23.1'
+    compile 'com.github.javaparser:javaparser-core:3.23.1'
 }
 
 task buildJar(type: Jar) {

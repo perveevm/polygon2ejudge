@@ -25,7 +25,7 @@ public class PythonCompiler extends AbstractCompiler implements Compiler {
         return instance;
     }
 
-    protected void prepareExecutable(Path sourcePath) throws ContestException {
+    private void prepareExecutable(Path sourcePath) throws ContestException {
         String script = "#!/bin/bash" + System.lineSeparator() +
                 String.format("/usr/bin/python3.9 %s \"$@\"", sourcePath) + System.lineSeparator();
         FileUtils.writeFile(FileUtils.removeExtension(sourcePath), script);

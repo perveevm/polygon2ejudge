@@ -24,7 +24,7 @@ public class FileUtils {
         }
     }
 
-    static void copyFileCorrectingLineBreaks(final Path from, final Path to) throws ContestException {
+    public static void copyFileCorrectingLineBreaks(final Path from, final Path to) throws ContestException {
         ConsoleLogger.logInfo("Copying %s to %s correcting line breaks", from.toString(), to.toString());
 
         try (BufferedReader reader = new BufferedReader(new FileReader(from.toFile()))) {
@@ -42,7 +42,7 @@ public class FileUtils {
         }
     }
 
-    static void moveFile(final Path from, final Path to) throws ContestException {
+    public static void moveFile(final Path from, final Path to) throws ContestException {
         ConsoleLogger.logInfo("Moving %s to %s", from.toString(), to.toString());
 
         try {
@@ -52,7 +52,7 @@ public class FileUtils {
         }
     }
 
-    static void deleteFile(final Path path) throws ContestException {
+    public static void deleteFile(final Path path) throws ContestException {
         ConsoleLogger.logInfo("Deleting %s", path.toString());
 
         try {
@@ -62,7 +62,7 @@ public class FileUtils {
         }
     }
 
-    static Path createFile(final Path path) throws ContestException {
+    public static Path createFile(final Path path) throws ContestException {
         ConsoleLogger.logInfo("Creating file %s", path.toString());
 
         try {
@@ -72,7 +72,7 @@ public class FileUtils {
         }
     }
 
-    static void createDirectory(final Path path) throws ContestException {
+    public static void createDirectory(final Path path) throws ContestException {
         ConsoleLogger.logInfo("Creating directory %s", path.toString());
 
         try {
