@@ -14,7 +14,7 @@ import java.nio.file.Path;
  * Provides methods for file system working
  */
 public class FileUtils {
-    static void copyFile(final Path from, final Path to) throws ContestException {
+    public static void copyFile(final Path from, final Path to) throws ContestException {
         ConsoleLogger.logInfo("Copying %s to %s", from.toString(), to.toString());
 
         try {
@@ -82,7 +82,7 @@ public class FileUtils {
         }
     }
 
-    static String readFile(final Path path) throws ContestException {
+    public static String readFile(final Path path) throws ContestException {
         ConsoleLogger.logInfo("Reading file %s", path.toString());
 
         StringBuilder res = new StringBuilder();

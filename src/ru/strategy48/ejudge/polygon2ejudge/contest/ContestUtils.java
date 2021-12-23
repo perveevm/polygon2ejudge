@@ -511,11 +511,11 @@ public class ContestUtils {
     private static boolean compileCode(final Path sourcePath, final String sourceType) throws ContestException {
         Compiler compiler;
         if (sourceType.contains("cpp")) {
-            compiler = new CPPCompiler(sourcePath);
+            compiler = CPPCompiler.getInstance();
         } else if (sourceType.contains("java")) {
-            compiler = new JavaCompiler(sourcePath);
+            compiler = JavaCompiler.getInstance();
         } else if (sourceType.contains("py")) {
-            compiler = new PythonCompiler(sourcePath);
+            compiler = PythonCompiler.getInstance();
         } else {
             return false;
         }
