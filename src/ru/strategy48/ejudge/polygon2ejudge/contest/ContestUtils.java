@@ -222,18 +222,22 @@ public class ContestUtils {
         }
 
         ConsoleLogger.logInfo("=== VALIDATING TESTS ===");
-        for (int i = 0; i < testCount; i++) {
-            ConsoleLogger.logInfo("Validating test number %d", i + 1);
-            Path testPath = Paths.get(problemDirectory.getParent().toString(), "tests",
-                    String.format(testNameFormat, i + 1));
+        if (config.getValidators() == null) {
+            ConsoleLogger.logInfo("There is no validator, skipping this stage...");
+        } else {
+            for (int i = 0; i < testCount; i++) {
+                ConsoleLogger.logInfo("Validating test number %d", i + 1);
+                Path testPath = Paths.get(problemDirectory.getParent().toString(), "tests",
+                        String.format(testNameFormat, i + 1));
 
-            for (ProblemFile validator : config.getValidators()) {
-                String validatorScript = removeExtension(validator.getPath().getFileName().toString());
-                int group = config.getTests().get(i).getGroup();
-                if (group != -1) {
-                    validatorScript += " --group " + group;
+                for (ProblemFile validator : config.getValidators()) {
+                    String validatorScript = removeExtension(validator.getPath().getFileName().toString());
+                    int group = config.getTests().get(i).getGroup();
+                    if (group != -1) {
+                        validatorScript += " --group " + group;
+                    }
+                    executeScript(validatorScript, problemDirectory.getParent(), testPath, null);
                 }
-                executeScript(validatorScript, problemDirectory.getParent(), testPath, null);
             }
         }
 
