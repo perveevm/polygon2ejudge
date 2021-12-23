@@ -5,6 +5,10 @@ import org.apache.commons.io.FileUtils;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
+import ru.strategy48.ejudge.polygon2ejudge.contest.compile.CPPCompiler;
+import ru.strategy48.ejudge.polygon2ejudge.contest.compile.Compiler;
+import ru.strategy48.ejudge.polygon2ejudge.contest.compile.JavaCompiler;
+import ru.strategy48.ejudge.polygon2ejudge.contest.compile.PythonCompiler;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.*;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.*;
 import ru.strategy48.ejudge.polygon2ejudge.contest.objects.Test;
@@ -167,9 +171,10 @@ public class ContestUtils {
             Path toPath = Paths.get(problemDirectory.getParent().toString(), fromPath.getFileName().toString());
             copyFile(fromPath, toPath);
 
-            if (executable.getType().contains("cpp")) {
-                compileCode(toPath, true);
-            }
+            compileCode(toPath, executable.getType());
+//            if (executable.getType().contains("cpp")) {
+//                compileCode(toPath, true);
+//            }
         }
     }
 
@@ -263,11 +268,14 @@ public class ContestUtils {
         deleteFile(Paths.get(checkerTo.getParent().toString(), fileWithoutExtension));
         copyFile(checkerFrom, checkerTo);
 
-        if (checkerType.contains("cpp")) {
-            compileCode(checkerTo, true);
-        } else {
+        if (!compileCode(checkerTo, checkerType)) {
             throw new UnsupportedLanguageException(checkerType);
         }
+//        if (checkerType.contains("cpp")) {
+//            compileCode(checkerTo, true);
+//        } else {
+//            throw new UnsupportedLanguageException(checkerType);
+//        }
 
         String solutionDir = null;
         String solutionType = "";
@@ -284,11 +292,14 @@ public class ContestUtils {
         Path to = Paths.get(problemDirectory.getParent().toString(), from.getFileName().toString());
 
         copyFile(from, to);
-        if (solutionType.contains("cpp")) {
-            compileCode(to, false);
-        } else {
+        if (!compileCode(to, solutionType)) {
             throw new UnsupportedLanguageException(solutionType);
         }
+//        if (solutionType.contains("cpp")) {
+//            compileCode(to, false);
+//        } else {
+//            throw new UnsupportedLanguageException(solutionType);
+//        }
 
         Path testsDir = Paths.get(problemDirectory.getParent().toString(), "tests");
         for (int i = 0; i < testCount; i++) {
@@ -491,5 +502,21 @@ public class ContestUtils {
         } catch (IOException | InterruptedException e) {
             throw new ScriptException(command, e);
         }
+    }
+
+    private static boolean compileCode(final Path sourcePath, final String sourceType) throws ContestException {
+        Compiler compiler;
+        if (sourceType.contains("cpp")) {
+            compiler = new CPPCompiler(sourcePath);
+        } else if (sourceType.contains("java")) {
+            compiler = new JavaCompiler(sourcePath);
+        } else if (sourceType.contains("py")) {
+            compiler = new PythonCompiler(sourcePath);
+        } else {
+            return false;
+        }
+
+        compiler.compile(sourcePath);
+        return true;
     }
 }

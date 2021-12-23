@@ -3,6 +3,7 @@ package ru.strategy48.ejudge.polygon2ejudge.contest;
 import ru.strategy48.ejudge.polygon2ejudge.ConsoleLogger;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ContestException;
 import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.FileSystemException;
+import ru.strategy48.ejudge.polygon2ejudge.contest.exceptions.ScriptException;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -99,13 +100,31 @@ public class FileUtils {
         return res.toString();
     }
 
-    static void writeFile(final Path path, final String data) throws ContestException {
+    public static void writeFile(final Path path, final String data) throws ContestException {
         ConsoleLogger.logInfo("Writing file %s", path.toString());
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(path.toFile()))) {
             writer.write(data);
         } catch (IOException e) {
             throw new FileSystemException(path, e);
+        }
+    }
+
+    public static Path removeExtension(final Path path) {
+        String s = path.toString();
+        return Path.of(s.substring(0, s.lastIndexOf('.')));
+    }
+
+    public static void makeExecutable(final Path path) throws ContestException {
+        String cmd = String.format("sudo chmod +x %s", path);
+        try {
+            Process chmod = Runtime.getRuntime().exec(cmd);
+            int exitCode = chmod.waitFor();
+            if (exitCode != 0) {
+                throw new ScriptException(cmd);
+            }
+        } catch (IOException | InterruptedException e) {
+            throw new ScriptException(cmd, e);
         }
     }
 }
