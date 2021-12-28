@@ -27,22 +27,26 @@ public class Main {
         Option contestIdOption = new Option("i", "contest_id", true, "Polygon contest ID");
         Option defaultConfigFileOption = new Option("s", "config", true, "Default serve.cfg template");
         Option contestsDirOption = new Option("d", "contest_dir", true, "Contest directory");
+        Option firstProblemShortName = new Option("n", "first_prob", true, "First problem short name");
 
         credentialsFileOption.setArgs(1);
         contestIdOption.setArgs(1);
         defaultConfigFileOption.setArgs(1);
         contestsDirOption.setArgs(1);
+        firstProblemShortName.setArgs(1);
 
         credentialsFileOption.setOptionalArg(false);
         contestIdOption.setOptionalArg(false);
         defaultConfigFileOption.setOptionalArg(false);
         contestsDirOption.setOptionalArg(false);
+        firstProblemShortName.setOptionalArg(false);
 
         Options posixOptions = new Options();
         posixOptions.addOption(credentialsFileOption);
         posixOptions.addOption(contestIdOption);
         posixOptions.addOption(defaultConfigFileOption);
         posixOptions.addOption(contestsDirOption);
+        posixOptions.addOption(firstProblemShortName);
 
         CommandLineParser parser = new DefaultParser();
         CommandLine commandLine;
@@ -59,10 +63,11 @@ public class Main {
         int contestId = Integer.parseInt(commandLine.getOptionValue("contest_id"));
         Path defaultConfigFile = Paths.get(commandLine.getOptionValue("config"));
         Path contestDirectory = Paths.get(commandLine.getOptionValue("contest_dir"));
+        char firstShortName = commandLine.getOptionValue("first_prob").charAt(0);
 
         try (PolygonSession session = getPolygonSession()) {
             ContestUtils.prepareContest(session, contestId, contestDirectory,
-                    "Generic", defaultConfigFile);
+                    "Generic", defaultConfigFile, firstShortName);
         } catch (IOException e) {
             ConsoleLogger.logError(e, "Error happened while reading credentials file!");
             e.printStackTrace();

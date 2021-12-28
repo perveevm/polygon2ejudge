@@ -3,7 +3,7 @@ plugins {
 }
 
 group 'ru.strategy48.ejudge'
-version '0.9'
+version '0.9.1'
 //sourceCompatibility 1.11
 //targetCompatibility 1.11
 

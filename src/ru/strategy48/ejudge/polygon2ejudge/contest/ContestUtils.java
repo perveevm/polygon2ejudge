@@ -38,17 +38,18 @@ public class ContestUtils {
     /**
      * Prepares contest: prepares all problems and generates serve.cfg
      *
-     * @param session            Polygon session for API usage
-     * @param contestId          contest ID in Polygon
-     * @param contestDirectory   contest directory (there will be created <code>problems</code> directory in it)
-     * @param genericProblemName generic problem name in default config file
-     * @param defaultConfig      default serve.cfg config path
+     * @param session               Polygon session for API usage
+     * @param contestId             contest ID in Polygon
+     * @param contestDirectory      contest directory (there will be created <code>problems</code> directory in it)
+     * @param genericProblemName    generic problem name in default config file
+     * @param defaultConfig         default serve.cfg config path
+     * @param firstProblemShortName first problem short name (for example, 'A' or '5')
      * @throws PolygonException if error happened while working with Polygon API
      * @throws ContestException if error happened while preparing contest
      */
     public static void prepareContest(final PolygonSession session, final int contestId, final Path contestDirectory,
-                                      final String genericProblemName, final Path defaultConfig)
-            throws PolygonException, ContestException {
+                                      final String genericProblemName, final Path defaultConfig,
+                                      final char firstProblemShortName) throws PolygonException, ContestException {
         List<Problem> problems = session.getContestProblems(contestId);
         int ejudgeProblemId = 0;
 
@@ -63,7 +64,7 @@ public class ContestUtils {
             createDirectory(problemPath);
 
             prepareProblem(session, problem.getId(), problemPath, genericProblemName, ejudgeProblemId,
-                    String.valueOf((char) ('A' + ejudgeProblemId - 1)));
+                    String.valueOf((char) (firstProblemShortName + ejudgeProblemId - 1)));
         }
 
         Path configDirectory = Paths.get(contestDirectory.toString(), "conf");
