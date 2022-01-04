@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class Group {
     private final String id;
     private final List<Test> tests;
-    private final List<Integer> dependencies;
+    private final List<String> dependencies;
     private final FeedbackPolicy feedbackPolicy;
     private final PointsPolicy pointsPolicy;
     private final int score;
@@ -29,7 +29,7 @@ public class Group {
      * @param feedbackPolicy feedback policy for given group
      * @param pointsPolicy   scoring policy for given group
      */
-    public Group(final String id, final List<Test> tests, final List<Integer> dependencies,
+    public Group(final String id, final List<Test> tests, final List<String> dependencies,
                  final FeedbackPolicy feedbackPolicy, final PointsPolicy pointsPolicy) {
         this.id = id;
         this.tests = tests;
@@ -59,7 +59,7 @@ public class Group {
         return tests;
     }
 
-    public List<Integer> getDependencies() {
+    public List<String> getDependencies() {
         return dependencies;
     }
 

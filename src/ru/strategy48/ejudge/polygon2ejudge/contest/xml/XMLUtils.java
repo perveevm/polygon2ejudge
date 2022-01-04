@@ -157,7 +157,7 @@ public class XMLUtils {
                 List<Test> curTests = tests.stream().filter((test) -> test.getGroup().equals(id)).
                         collect(Collectors.toList());
 
-                List<Integer> dependencies = null;
+                List<String> dependencies = null;
                 if (group.getElementsByTagName("dependencies").getLength() != 0) {
                     NodeList dependenciesList = ((Element) group.getElementsByTagName("dependencies").item(0))
                             .getElementsByTagName("dependency");
@@ -165,7 +165,7 @@ public class XMLUtils {
 
                     for (int j = 0; j < dependenciesList.getLength(); j++) {
                         Element dependency = (Element) dependenciesList.item(j);
-                        dependencies.add(Integer.parseInt(dependency.getAttribute("group")));
+                        dependencies.add(dependency.getAttribute("group"));
                     }
                 }
 
