@@ -38,8 +38,8 @@ You should use such command to download and prepare contest from Polygon:
 
 ## Problems
 
-1. Only C++ checkers/generators/validators are supported
+1. ~~Only C++ checkers/generators/validators are supported~~ Done!
 2. ~~No interactive problems support~~ Done!
-3. Only C++ main correct solutions supported
+3. ~~Only C++ main correct solutions supported~~ Done!
 4. ~~No test validation~~ Done!
-5. No flexible parameterss configuration in serve.cfg
+5. No flexible parameters configuration in serve.cfg
