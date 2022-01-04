@@ -212,7 +212,7 @@ public class ContestUtils {
                 executedMultigenScripts.add(config.getTests().get(i).getCmd());
             }
 
-            String fromFile = config.getTests().get(i).getFromFile();
+            String fromFile = String.format("%02d", Integer.parseInt(config.getTests().get(i).getFromFile()));
             if (fromFile != null) {
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
                 Path to = testFile.toAbsolutePath();
