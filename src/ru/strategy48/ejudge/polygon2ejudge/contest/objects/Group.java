@@ -83,7 +83,7 @@ public class Group {
     @Override
     public String toString() {
         StringBuilder res = new StringBuilder();
-        res.append(String.format("group %d {\n", id));
+        res.append(String.format("group %s {\n", id));
         res.append("\ttests ").append(testsIntervals.stream().map(Interval::toString)
                 .collect(Collectors.joining(","))).append(";\n");
         res.append("\t").append(String.format("score %d;\n", score));
