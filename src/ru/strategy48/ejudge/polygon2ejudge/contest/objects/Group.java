@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
  * Describes group of tests
  */
 public class Group {
-    private final int id;
+    private final String id;
     private final List<Test> tests;
     private final List<Integer> dependencies;
     private final FeedbackPolicy feedbackPolicy;
@@ -29,7 +29,7 @@ public class Group {
      * @param feedbackPolicy feedback policy for given group
      * @param pointsPolicy   scoring policy for given group
      */
-    public Group(final int id, final List<Test> tests, final List<Integer> dependencies,
+    public Group(final String id, final List<Test> tests, final List<Integer> dependencies,
                  final FeedbackPolicy feedbackPolicy, final PointsPolicy pointsPolicy) {
         this.id = id;
         this.tests = tests;
@@ -51,7 +51,7 @@ public class Group {
         this.testsIntervals.add(new Interval(prev, this.tests.get(this.tests.size() - 1).getId()));
     }
 
-    public int getId() {
+    public String getId() {
         return id;
     }
 

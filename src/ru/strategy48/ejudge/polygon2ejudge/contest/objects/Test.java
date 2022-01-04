@@ -8,12 +8,12 @@ public class Test {
     private final int id;
     private final GenerationMethod method;
     private final String cmd;
-    private final int group;
+    private final String group;
     private final int points;
     private final boolean sample;
     private final String fromFile;
 
-    public Test(final int id, final GenerationMethod method, final String cmd, final int group, final int points,
+    public Test(final int id, final GenerationMethod method, final String cmd, final String group, final int points,
                 final boolean sample, final String fromFile) {
         this.id = id;
         this.method = method;
@@ -36,7 +36,7 @@ public class Test {
         return cmd;
     }
 
-    public int getGroup() {
+    public String getGroup() {
         return group;
     }
 

@@ -74,9 +74,9 @@ public class XMLUtils {
             if (((Element) testsNode.item(i)).hasAttribute("points")) {
                 points = (int) Double.parseDouble(((Element) testsNode.item(i)).getAttribute("points"));
             }
-            int group = -1;
+            String group = null;
             if (((Element) testsNode.item(i)).hasAttribute("group")) {
-                group = Integer.parseInt(((Element) testsNode.item(i)).getAttribute("group"));
+                group = ((Element) testsNode.item(i)).getAttribute("group");
             }
             boolean sample = false;
             if (((Element) testsNode.item(i)).hasAttribute("sample")) {
@@ -153,8 +153,8 @@ public class XMLUtils {
             for (int i = 0; i < groupsNode.getLength(); i++) {
                 Element group = (Element) groupsNode.item(i);
 
-                int id = Integer.parseInt(group.getAttribute("name"));
-                List<Test> curTests = tests.stream().filter((test) -> test.getGroup() == id).
+                String id = group.getAttribute("name");
+                List<Test> curTests = tests.stream().filter((test) -> test.getGroup().equals(id)).
                         collect(Collectors.toList());
 
                 List<Integer> dependencies = null;

@@ -233,8 +233,8 @@ public class ContestUtils {
 
                 for (ProblemFile validator : config.getValidators()) {
                     String validatorScript = removeExtension(validator.getPath().getFileName().toString());
-                    int group = config.getTests().get(i).getGroup();
-                    if (group != -1) {
+                    String group = config.getTests().get(i).getGroup();
+                    if (group != null) {
                         validatorScript += " --group " + group;
                     }
                     executeScript(validatorScript, problemDirectory.getParent(), testPath, null);
