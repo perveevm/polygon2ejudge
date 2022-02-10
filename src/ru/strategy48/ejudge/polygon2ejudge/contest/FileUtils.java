@@ -52,6 +52,11 @@ public class FileUtils {
         }
     }
 
+    public static boolean exists(final Path p) {
+        ConsoleLogger.logInfo("Checking if file %s exists", p.toString());
+        return Files.exists(p);
+    }
+
     public static void deleteFile(final Path path) throws ContestException {
         ConsoleLogger.logInfo("Deleting %s", path.toString());
 

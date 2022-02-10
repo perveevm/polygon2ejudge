@@ -214,7 +214,9 @@ public class ContestUtils {
 
             String fromFile = config.getTests().get(i).getFromFile();
             if (fromFile != null) {
-//                fromFile = String.format("%02d", Integer.parseInt(fromFile));
+                if (!exists(Paths.get(problemDirectory.getParent().toString(), fromFile))) {
+                    fromFile = String.format("%02d", Integer.parseInt(fromFile));
+                }
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
                 Path to = testFile.toAbsolutePath();
 
