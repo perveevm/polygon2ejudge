@@ -92,11 +92,16 @@ public class XMLUtils {
 
         NodeList resourcesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
                 getElementsByTagName("resources").item(0)).getElementsByTagName("file");
-        NodeList executablesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
-                getElementsByTagName("executables").item(0)).getElementsByTagName("executable");
+        Element files = (Element) document.getElementsByTagName("files").item(0);
+        NodeList executablesNode;
+        if (files.hasAttribute("executables")) {
+            executablesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
+                    getElementsByTagName("executables").item(0)).getElementsByTagName("executable");
+        } else {
+            executablesNode = null;
+        }
 
         List<ProblemFile> resources = new ArrayList<>(resourcesNode.getLength());
-        List<ProblemFile> executables = new ArrayList<>(executablesNode.getLength());
 
         for (int i = 0; i < resourcesNode.getLength(); i++) {
             Path path = Path.of(((Element) resourcesNode.item(i)).getAttribute("path"));
@@ -107,8 +112,14 @@ public class XMLUtils {
             resources.add(new ProblemFile(path, type));
         }
 
-        for (int i = 0; i < executablesNode.getLength(); i++) {
-            executables.add(parseProblemFileFromNode((Element) executablesNode.item(i)));
+        List<ProblemFile> executables;
+        if (executablesNode != null) {
+            executables = new ArrayList<>(executablesNode.getLength());
+            for (int i = 0; i < executablesNode.getLength(); i++) {
+                executables.add(parseProblemFileFromNode((Element) executablesNode.item(i)));
+            }
+        } else {
+            executables = new ArrayList<>();
         }
 
         Element assetsNode = (Element) document.getElementsByTagName("assets").item(0);
