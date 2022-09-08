@@ -92,9 +92,10 @@ public class XMLUtils {
 
         NodeList resourcesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
                 getElementsByTagName("resources").item(0)).getElementsByTagName("file");
-        Element files = (Element) document.getElementsByTagName("files").item(0);
+        NodeList files = ((Element) document.getElementsByTagName("files").item(0)).
+                getElementsByTagName("executables");
         NodeList executablesNode;
-        if (files.hasAttribute("executables")) {
+        if (files.getLength() > 0) {
             executablesNode = ((Element) ((Element) document.getElementsByTagName("files").item(0)).
                     getElementsByTagName("executables").item(0)).getElementsByTagName("executable");
         } else {
