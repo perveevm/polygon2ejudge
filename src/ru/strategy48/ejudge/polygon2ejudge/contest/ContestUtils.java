@@ -215,7 +215,16 @@ public class ContestUtils {
             String fromFile = config.getTests().get(i).getFromFile();
             if (fromFile != null) {
                 if (!exists(Paths.get(problemDirectory.getParent().toString(), fromFile))) {
-                    fromFile = String.format("%02d", Integer.parseInt(fromFile));
+                    for (int zeros = 1; zeros <= 5; zeros++) {
+                        String format = "%0" + zeros + "d";
+                        fromFile = String.format(format, Integer.parseInt(fromFile));
+                        if (exists(Paths.get(problemDirectory.getParent().toString(), fromFile))) {
+                            break;
+                        }
+                    }
+                    if (!exists(Paths.get(problemDirectory.getParent().toString(), fromFile))) {
+                        throw new ContestException("There is no test file, aborting!");
+                    }
                 }
                 Path from = Paths.get(problemDirectory.getParent().toString(), fromFile);
                 Path to = testFile.toAbsolutePath();
