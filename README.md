@@ -1,5 +1,7 @@
 # polygon2ejudge
 
+# This tool is outdated. Please, see [polygon2ejudge-v2](https://github.com/perveevm/polygon2ejudge-v2).
+
 Tool for automatic configuring Polygon problems on eJudge
 
 ## Build
